@@ -8,6 +8,13 @@ App.Router.map(function() {
             this.route('delete');
         });
     });
+    this.resource('sources', function() {
+        this.route('new');
+        this.resource('source', { path: ':source_id' }, function() {
+            this.route('edit');
+            this.route('delete');
+        });
+    });
 });
 
 App.ApplicationAdapter = DS.RESTAdapter.extend({

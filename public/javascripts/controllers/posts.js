@@ -10,7 +10,7 @@ App.PostsNewRoute = Ember.Route.extend({
             var self = this;
             var post = this.store.createRecord('post', this.controller.getProperties(['name', 'text']));
             post.save().then(function(post) {
-                self.translateTo('post', post);
+                self.transitionTo('post', post);
             });
         }
     }
@@ -22,10 +22,11 @@ App.PostEditRoute = Ember.Route.extend({
     },
     actions: {
         update: function() {
+            var self = this;
             post = this.modelFor('post')
             post.setProperties(this.controller.getProperties(['name', 'text']));
             post.save().then(function(post) {
-                self.translateTo('post', post);
+                self.transitionTo('post', post);
             });
         }
     }

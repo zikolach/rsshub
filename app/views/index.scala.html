@@ -12,8 +12,41 @@
 
     <script type="text/x-handlebars" data-template-name="application">
         <h1>RSS Hub</h1>
+        {{#linkTo "sources"}}Sources{{/linkTo}}
         {{#linkTo "posts"}}Posts{{/linkTo}}
         {{outlet}}
+    </script>
+
+    <script type="text/x-handlebars" data-template-name="sources">
+        <h1>Sources</h1>
+        {{#linkTo "sources.new"}}Create{{/linkTo}}
+        <ul>
+            {{#each controller}}
+            <li>{{#linkTo "source" id}}{{name}}{{/linkTo}}</li>
+            {{/each}}
+        </ul>
+        {{outlet}}
+    </script>
+
+    <script type="text/x-handlebars" data-template-name="sources/new">
+        <h2>New source</h2>
+        {{input value=name}}
+        {{textarea value=url}}
+        <button {{action "create"}}>Create</button>
+    </script>
+
+    <script type="text/x-handlebars" data-template-name="source">
+        <h2>Source</h2>
+        {{#linkTo "source.delete" id}}Delete{{/linkTo}}
+        {{name}}
+        {{url}}
+        {{outlet}}
+    </script>
+
+    <script type="text/x-handlebars" data-template-name="source/delete">
+        <h2>Delete source</h2>
+        Are you sure?
+        <button {{action "delete"}}>Delete</button>
     </script>
 
     <script type="text/x-handlebars" data-template-name="posts">
@@ -62,6 +95,8 @@
     <script src="@routes.Assets.at("javascripts/ember-data.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/app.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/models/post.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/models/source.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/controllers/posts.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/controllers/sources.js")" type="text/javascript"></script>
 </body>
 </html>
