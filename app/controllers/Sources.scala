@@ -49,4 +49,5 @@ object Sources extends Controller {
     Source.delete(id)
     Ok(Json.toJson(new PostWrapper(None)))
   }
+
 }

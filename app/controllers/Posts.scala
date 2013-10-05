@@ -13,7 +13,15 @@ object Posts extends Controller {
   implicit val postWrapperFormat = Json.format[PostWrapper]
 
   def index = Action {
-    Ok(Json.toJson(new PostsWrapper(Post.all())))
+    implicit request => {
+      request.getQueryString("search") match {
+        case Some(search) => {
+          val reg = "(?iu)(.*)" + search + "(.*)"
+          Ok(Json.toJson(new PostsWrapper(Post.all().filter( post => post.name.matches(reg)))))
+        }
+        case None => Ok(Json.toJson(new PostsWrapper(Post.all())))
+      }
+    }
   }
 
   def get(id: Long) = Action {

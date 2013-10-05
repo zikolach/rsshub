@@ -1,7 +1,17 @@
 App.PostsRoute = Ember.Route.extend({
-   model: function() {
-        return this.store.find("post");
-   }
+//   model: function() {
+//        return this.store.findQuery("post");
+//   }
+});
+
+App.PostsController = Ember.ArrayController.extend({
+    sortProperties: ['name'],
+    sortAscending: true,
+    actions: {
+        search: function(criteria) {
+            this.set('model', this.store.findQuery("post", { search: criteria }));
+        }
+    }
 });
 
 App.PostsNewRoute = Ember.Route.extend({

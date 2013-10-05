@@ -52,6 +52,9 @@
     <script type="text/x-handlebars" data-template-name="posts">
         <h1>Posts</h1>
         {{#linkTo "posts.new"}}Create{{/linkTo}}
+        {{input value=criteria}}
+        <button {{action "search" criteria }}></button>
+        <hr>
         <ul>
             {{#each controller}}
             <li>{{#linkTo "post" id}}{{name}}{{/linkTo}}</li>
@@ -71,8 +74,9 @@
         <h2>Post</h2>
         {{#linkTo "post.edit" id}}Edit{{/linkTo}}
         {{#linkTo "post.delete" id}}Delete{{/linkTo}}
-        {{name}}
-        {{text}}
+        <h3>{{name}}</h3>
+        <hr>
+        {{{text}}}
         {{outlet}}
     </script>
 

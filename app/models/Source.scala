@@ -7,6 +7,9 @@ import play.api.db.DB
 import anorm.~
 import scala.Some
 import play.api.Play.current
+import com.sun.syndication.feed.synd.SyndFeed
+import java.net.{HttpURLConnection, URL}
+import scala.xml.{Node, XML}
 
 case class Source(id: Option[Long], name: String, url: String)
 
@@ -29,7 +32,10 @@ object Source {
       'url -> url
     ).executeInsert()
   } match {
-    case Some(long: Long) => long
+    case Some(long: Long) => {
+      fetch(long)
+      long
+    }
   }
 
   def update(id: Long, name: String, url: String) = DB.withConnection {
@@ -44,5 +50,15 @@ object Source {
     implicit  c => SQL("delete sources where id = {id}").on(
       'id -> id
     ).executeUpdate()
+  }
+
+  private def fetch(id: Long) = DB.withConnection {
+    implicit c => {
+      val s = SQL("select * from sources where id = {id}").on( 'id -> id ).as(source single)
+      val feed = XML.load((new URL(s.url)).openConnection.getInputStream)
+      val entries: List[Node] = (feed \ "entry").toList
+      entries.foreach((entry: Node) => Post.create(entry \ "title" text, entry \ "content" text))
+      feed
+    }
   }
 }

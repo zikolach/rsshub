@@ -12,7 +12,6 @@ POST    /api/v1/sources               controllers.Sources.create
 PUT     /api/v1/sources/:id           controllers.Sources.update(id: Long)
 DELETE  /api/v1/sources/:id           controllers.Sources.delete(id: Long)
 
-
 # Posts
 GET     /api/v1/posts               controllers.Posts.index
 GET     /api/v1/posts/:id           controllers.Posts.get(id: Long)
