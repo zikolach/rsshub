@@ -4,8 +4,8 @@ App.PostsRoute = Ember.Route.extend({
 //   }
 });
 
-App.PostsController = Ember.ArrayController.extend({
-    sortProperties: ['name'],
+App.PostsSearchController = Ember.ArrayController.extend({
+    sortProperties: ['distance','name'],
     sortAscending: true,
     actions: {
         search: function(criteria) {

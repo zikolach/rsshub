@@ -2,6 +2,7 @@ var App = Ember.Application.create();
 
 App.Router.map(function() {
     this.resource('posts', function() {
+        this.route('search');
         this.route('new');
         this.resource('post', { path: ':post_id' }, function() {
             this.route('edit');

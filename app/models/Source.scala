@@ -7,14 +7,19 @@ import play.api.db.DB
 import anorm.~
 import scala.Some
 import play.api.Play.current
-import com.sun.syndication.feed.synd.SyndFeed
 import java.net.{HttpURLConnection, URL}
 import scala.xml.{Node, XML}
+import util.{CeptAPI, FeedReader}
 
 case class Source(id: Option[Long], name: String, url: String)
 
 object Source {
   val source = long("id") ~ str("name") ~ str("url") map { case id~name~url => Source(Some(id), name, url)}
+
+  def norm_str(s: String): String = {
+    val res = s.replaceAll("[^\\w\\d ]", "")
+    res.substring(0, Math.min(255, res.length))
+  }
 
   def all(): List[Source] = DB.withConnection {
     implicit c => SQL("select * from sources").as(source *)
@@ -52,13 +57,14 @@ object Source {
     ).executeUpdate()
   }
 
-  private def fetch(id: Long) = DB.withConnection {
+  private def fetch(id: Long): Unit = DB.withConnection {
     implicit c => {
       val s = SQL("select * from sources where id = {id}").on( 'id -> id ).as(source single)
-      val feed = XML.load((new URL(s.url)).openConnection.getInputStream)
-      val entries: List[Node] = (feed \ "entry").toList
-      entries.foreach((entry: Node) => Post.create(entry \ "title" text, entry \ "content" text))
-      feed
+      FeedReader.readEntries(s.url).foreach((entry) => {
+        println(entry._1)
+        val fp = CeptAPI.bitmap(norm_str(entry._1))
+        println(Post.create(norm_str(entry._1), entry._2, fp.get.positions))
+      })
     }
   }
 }

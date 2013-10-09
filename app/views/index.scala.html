@@ -52,15 +52,19 @@
     <script type="text/x-handlebars" data-template-name="posts">
         <h1>Posts</h1>
         {{#linkTo "posts.new"}}Create{{/linkTo}}
+        {{#linkTo "posts.search"}}Search{{/linkTo}}
+        {{outlet}}
+    </script>
+
+    <script type="text/x-handlebars" data-template-name="posts/search">
         {{input value=criteria}}
         <button {{action "search" criteria }}></button>
         <hr>
         <ul>
             {{#each controller}}
-            <li>{{#linkTo "post" id}}{{name}}{{/linkTo}}</li>
+            <li>{{#linkTo "post" id}}{{name}}{{/linkTo}} (distance: {{distance}})</li>
             {{/each}}
         </ul>
-        {{outlet}}
     </script>
 
     <script type="text/x-handlebars" data-template-name="posts/new">

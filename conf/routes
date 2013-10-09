@@ -4,6 +4,8 @@
 
 # Home page
 GET     /                           controllers.Application.index
+GET     /test                       controllers.Application.test
+
 
 # Sources
 GET     /api/v1/sources               controllers.Sources.index
