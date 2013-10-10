@@ -58,11 +58,17 @@
 
     <script type="text/x-handlebars" data-template-name="posts/search">
         {{input value=criteria}}
-        <button {{action "search" criteria }}></button>
+        <button {{action "search" criteria }}>Search</button>
         <hr>
         <ul>
             {{#each controller}}
-            <li>{{#linkTo "post" id}}{{name}}{{/linkTo}} (distance: {{distance}})</li>
+            <li>
+                {{#linkTo "post" id}}{{name}}{{/linkTo}} (distance: {{distance}})
+                <br/>
+                {{#each tags}}
+                    <small>{{this}}</small>
+                {{/each}}
+            </li>
             {{/each}}
         </ul>
     </script>

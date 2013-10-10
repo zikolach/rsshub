@@ -16,13 +16,31 @@ object CeptAPI {
     override def toString = "{overlap: "+overlap.toString+", overallOverlap: "+overallOverlap.toString+", oneInTwo: "+oneInTwo.toString+", twoInOne: "+twoInOne.toString+", distance: "+distance.toString+"}"
   }
 
+  case class SimilarTerm(rank: Int,
+                         term: String,
+                         distance: Double,
+                         relDf: Double)
+  case class SimilarResponse(time: Int,
+                             queryStatus:
+                             QueryStatus,
+                             term: String,
+                             totalSimilarterms: Int,
+                             similarterms: List[SimilarTerm])
+
+
   implicit val formatBitmap = Json.format[Bitmap]
   implicit val formatQueryStatus = Json.format[QueryStatus]
   implicit val formatBitmapResponse = Json.format[BitmapResponse]
+  implicit val formatSimilarTerm = Json.format[SimilarTerm]
+  implicit val formatSimilarResponse = Json.format[SimilarResponse]
 
 
   private def bitmapSvc(term: String) =
-    url("http://api.cept.at/v1/term2bitmap").GET.addQueryParameter("term", term).addQueryParameter("app_id", appId).addQueryParameter("app_key", appKey)
+    url("http://api.cept.at/v1/term2bitmap")
+      .GET
+      .addQueryParameter("term", term)
+      .addQueryParameter("app_id", appId)
+      .addQueryParameter("app_key", appKey)
 
   def bitmap(term: String): Option[Bitmap] = {
     val res = Http(bitmapSvc(term) OK as.String)
@@ -41,6 +59,35 @@ object CeptAPI {
   }
 
   def compareSimilarity(a: Bitmap, b: Bitmap): CompareResult = compareSimilarity(a.positions, b.positions)
+
+  private def similarSvc(term: String,
+                         similartermsLimit: Int, similartermsOffset: Int,
+                         minRelDf: Double, maxRelDf: Double,
+                         posFilter: String, posConfidence: Double) =
+    url("http://api.cept.at/v1/similarterms-xl")
+      .GET
+      .addQueryParameter("term", term)
+      .addQueryParameter("similarterms_limit", similartermsLimit.toString)
+      .addQueryParameter("similarterms_offset", similartermsOffset.toString)
+      .addQueryParameter("min_rel_df", minRelDf.toString)
+      .addQueryParameter("max_rel_df", maxRelDf.toString)
+      .addQueryParameter("pos_filter", posFilter)
+      .addQueryParameter("pos_confidence", posConfidence.toString)
+      .addQueryParameter("app_id", appId)
+      .addQueryParameter("app_key", appKey)
+
+  def findSimilar(term: String,
+                  similartermsLimit: Int, similartermsOffset: Int,
+                  minRelDf: Double, maxRelDf: Double,
+                  posFilter: String, posConfidence: Double): Option[List[SimilarTerm]] = {
+    val res = Http(similarSvc(term, similartermsLimit, similartermsOffset, minRelDf, maxRelDf, posFilter, posConfidence) OK as.String)
+    val json = res()
+    Json.parse(json).validate[SimilarResponse].map(
+      r => Some(r.similarterms)
+    ).recoverTotal(
+      e => None
+    )
+  }
 
   def printBitmap(term: String) = {
     print("Bitmap: ")

@@ -17,7 +17,7 @@ object Source {
   val source = long("id") ~ str("name") ~ str("url") map { case id~name~url => Source(Some(id), name, url)}
 
   def norm_str(s: String): String = {
-    val res = s.replaceAll("[^\\w\\d ]", "")
+    val res = s.replaceAll("[^\\w\\d\\s]", "")
     res.substring(0, Math.min(255, res.length))
   }
 
@@ -62,8 +62,11 @@ object Source {
       val s = SQL("select * from sources where id = {id}").on( 'id -> id ).as(source single)
       FeedReader.readEntries(s.url).foreach((entry) => {
         println(entry._1)
-        val fp = CeptAPI.bitmap(norm_str(entry._1))
-        println(Post.create(norm_str(entry._1), entry._2, fp.get.positions))
+        val title = norm_str(entry._1)
+        val fp = CeptAPI.bitmap(title)
+        val id = Post.create(title, entry._2, fp.get.positions)
+        val sims = CeptAPI.findSimilar(title, 10, 0, 0, 1, "N", 0.95).get
+        sims.foreach(sim => Post.addTag(id, sim.term))
       })
     }
   }

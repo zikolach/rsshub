@@ -11,7 +11,8 @@ object Application extends Controller {
   }
 
   def test = Action {
-    CeptAPI.printBitmap("mood")
+    val sims = CeptAPI.findSimilar("test", 10, 0, 0, 1, "N", 0.95).get
+    sims.foreach(println)
     Ok("Ok")
   }
 

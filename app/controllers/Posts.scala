@@ -1,7 +1,7 @@
 package controllers
 
 import play.api.mvc.{Action, Controller}
-import models.Post
+import models._
 import play.api.libs.json.{JsError, Json}
 import util.CeptAPI
 
@@ -21,7 +21,7 @@ object Posts extends Controller {
 //          Ok(Json.toJson(new PostsWrapper(Post.all().filter( post => post.name.matches(reg)))))
           val searchBitmap: Array[Int] = CeptAPI.bitmap(search).get.positions
           val posts = Post.all()
-            .map(post => Post(post.id, post.name, post.text, None, Some(CeptAPI.compareSimilarity(post.fingerprint.get, searchBitmap).distance)))
+            .map(post => Post(post.id, post.name, post.text, None, Some(CeptAPI.compareSimilarity(post.fingerprint.get, searchBitmap).distance), Some(Tag.find(post.id.get).map(t => t.name))))
             .filter(p => p.distance.get < 1.0)
             .sortWith((a, b) => a.distance.get < b.distance.get)
 
@@ -39,10 +39,10 @@ object Posts extends Controller {
   def create = Action(parse.json) {
     implicit request =>
       request.body.validate[PostWrapper].map {
-        case PostWrapper(Some(Post(None, name, text, None, None))) => {
+        case PostWrapper(Some(Post(None, name, text, None, None, None))) => {
           val fp = CeptAPI.bitmap(name)
           val id: Long = Post.create(name, text, fp.get.positions)
-          Ok(Json.toJson(PostWrapper(Some(Post(Some(id), name, text, None, None)))))
+          Ok(Json.toJson(PostWrapper(Some(Post(Some(id), name, text, None, None, None)))))
         }
       }.recoverTotal{
         e => BadRequest("Error: " + JsError.toFlatJson(e))
@@ -52,10 +52,10 @@ object Posts extends Controller {
   def update(id: Long) = Action(parse.json) {
     implicit request =>
       request.body.validate[PostWrapper].map {
-        case PostWrapper(Some(Post(None, name, text, None, None))) => {
+        case PostWrapper(Some(Post(None, name, text, None, None, None))) => {
           val fp = CeptAPI.bitmap(text)
           Post.update(id, name, text, fp.get.positions)
-          Ok(Json.toJson(PostWrapper(Some(Post(Some(id), name, text, None, None)))))
+          Ok(Json.toJson(PostWrapper(Some(Post(Some(id), name, text, None, None, None)))))
         }
       }.recoverTotal{
         e => BadRequest("Error: " + JsError.toFlatJson(e))
