@@ -4,65 +4,65 @@ import play.api.db.DB
 import anorm.SqlParser._
 import anorm._
 import play.api.Play.current
+import java.util.Date
 
 
 case class Post(id: Option[Long],
-                name: String,
-                text: String,
+                title: String,
+                link: String,
+                description: String,
+                pubDate: Date,
                 fingerprint: Option[Array[Int]],
                 distance: Option[Double],
                 tags: Option[List[Long]])
 
 object Post {
 
-  //  implicit def columnToArray: Column[Array[Int]] = Column.nonNull[Array[Int]] { (value, meta) =>
-//    val MetaDataItem(qualified, nullable, clazz) = meta
-//    println(value.getClass)
-//    value match {
-//      case arr: Array[Int] => Right(arr)
-//      case _ => Left(TypeDoesNotMatch("Cannot convert " + value + ":" + value.asInstanceOf[AnyRef].getClass + " to Array[Int] for column " + qualified))
-//    }
-//  }
-
-//  def integers(columnName: String): RowParser[Array[Int]] = SqlParser.get[Array[Int]](columnName)(implicitly[Column[Array[Int]]])
-
   def arr_to_hex(arr: Array[Int]): String = arr.map(v => "%04X".format(v)).mkString
 
   def hex_to_arr(hex: String): Array[Int] = hex.sliding(4, 4).map(v => Integer.parseInt(v, 16)).toArray
 
-  val post = long("id") ~ str("name") ~ str("text") ~ str("fingerprint") map { case id~name~text~fingerprint => Post(Some(id), name, text, Some(hex_to_arr(fingerprint)), None, None)}
+  val post = long("id") ~ str("title") ~ str("link") ~ str("description") ~ date("pub_date") ~ str("fingerprint") map { case id~title~link~description~pubDate~fingerprint => Post(Some(id), title, link, description, pubDate, Some(hex_to_arr(fingerprint)), None, None)}
 
   def all(): List[Post] = DB.withConnection {
     implicit c => SQL("select * from posts").as(post *)
-  }.map(p => Post(p.id, p.name, p.text, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
+  }.map(p => Post(p.id, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
 
   def get(id: Long): Post = DB.withConnection {
     implicit c => SQL("select * from posts where id = {id}").on(
       'id -> id
     ).as(post single)
   } match {
-    case Post(id, name, text, fingerprint, distance, tags) => Post(id, name, text, fingerprint, distance, Some(Tag.find(id.get).map(_.id)))
+    case Post(id, title, link, description, pubDate, fingerprint, distance, tags) => Post(id, title, link, description, pubDate, fingerprint, distance, Some(Tag.find(id.get).map(_.id)))
   }
 
   def get(ids: List[Long]): List[Post] = DB.withConnection {
     implicit c => SQL("select * from posts where id in (%s)" format ids.mkString(",")).as(post *)
-  }.map(p => Post(p.id, p.name, p.text, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
+  }.map(p => Post(p.id, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
 
-  def create(name: String, text: String, fingerprint: Array[Int]): Long = DB.withConnection {
-    implicit c => SQL("insert into posts(name, text, fingerprint) values ({name}, {text}, {fingerprint})").on(
-      'name -> name,
-      'text -> text,
+  def create(title: String, link: String, description: String, pubDate: Date,
+             fingerprint: Array[Int]): Long = DB.withConnection {
+    implicit c => SQL("insert into posts(title, link, description, pub_date, fingerprint) values ({title}, {link}, {description}, {pub_date}, {fingerprint})").on(
+      'title -> title,
+      'link -> link,
+      'description -> description,
+      'pub_date -> pubDate,
       'fingerprint -> arr_to_hex(fingerprint)
     ).executeInsert()
   } match {
     case Some(long: Long) => long
+    case None => -1
   }
 
-  def update(id: Long, name: String, text: String, fingerprint: Array[Int]) = DB.withConnection {
+  def update(id: Long,
+             title: String, link: String, description: String, pubDate: Date,
+             fingerprint: Array[Int]) = DB.withConnection {
     implicit c => SQL("update posts set name = {name}, text = {text}, fingerprint = {fingerprint} where id = {id}").on(
       'id -> id,
-      'name -> name,
-      'text -> text,
+      'title -> title,
+      'link -> link,
+      'description -> description,
+      'pub_date -> pubDate,
       'fingerprint -> arr_to_hex(fingerprint)
     ).executeUpdate()
   }

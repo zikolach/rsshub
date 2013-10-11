@@ -64,7 +64,7 @@
         <ul>
             {{#each controller}}
             <li>
-                {{#linkTo "post" id}}{{name}}{{/linkTo}} (distance: {{distance}})
+                {{#linkTo "post" id}}{{title}}{{/linkTo}} (distance: {{distance}})
                 <br/>
                 {{#each tag in tags}}
                     <small>{{#linkTo "tag" tag}}{{tag.name}}{{/linkTo}}</small>
@@ -76,8 +76,10 @@
 
     <script type="text/x-handlebars" data-template-name="posts/new">
         <h2>New post</h2>
-        {{input value=name}}
-        {{textarea value=text}}
+        {{input value=title}}
+        {{input value=link}}
+        {{textarea value=description}}
+        {{input value=pubDate}}
         <button {{action "create"}}>Create</button>
     </script>
 
@@ -85,20 +87,24 @@
         <h2>Post</h2>
         {{#linkTo "post.edit" id}}Edit{{/linkTo}}
         {{#linkTo "post.delete" id}}Delete{{/linkTo}}
-        <h3>{{name}}</h3>
+        <h3>{{title}}</h3>
         <br/>
         {{#each tag in tags}}
         <small>{{#linkTo "tag" tag}}{{tag.name}}{{/linkTo}}</small>
         {{/each}}
         <hr/>
-        {{{text}}}
+        <a {{bind-attr href=link}}>{{link}}</a>
+        {{pubDate}}
+        {{{description}}}
         {{outlet}}
     </script>
 
     <script type="text/x-handlebars" data-template-name="post/edit">
         <h2>Edit post</h2>
-        {{input value=name}}
-        {{textarea value=text}}
+        {{input value=title}}
+        {{input value=link}}
+        {{textarea value=description}}
+        {{input value=pubDate}}
         <button {{action "update"}}>Update</button>
     </script>
 
@@ -136,7 +142,7 @@
         <hr>
         <nl>
         {{#each post in posts}}
-            <li>{{#linkTo "post" post}}{{post.name}}{{/linkTo}}</li>
+            <li>{{#linkTo "post" post}}{{post.title}}{{/linkTo}}</li>
         {{/each}}
         </nl>
     </script>

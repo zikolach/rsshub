@@ -5,7 +5,7 @@ App.PostsRoute = Ember.Route.extend({
 });
 
 App.PostsSearchController = Ember.ArrayController.extend({
-    sortProperties: ['distance','name'],
+    sortProperties: ['distance','title'],
     sortAscending: true,
     actions: {
         search: function(criteria) {
@@ -18,7 +18,7 @@ App.PostsNewRoute = Ember.Route.extend({
     actions: {
         create: function() {
             var self = this;
-            var post = this.store.createRecord('post', this.controller.getProperties(['name', 'text']));
+            var post = this.store.createRecord('post', this.controller.getProperties(['title', 'link', 'description', 'pubDate']));
             post.save().then(function(post) {
                 self.transitionTo('post', post);
             });
@@ -28,13 +28,13 @@ App.PostsNewRoute = Ember.Route.extend({
 
 App.PostEditRoute = Ember.Route.extend({
     setupController: function(controller) {
-        controller.setProperties((this.modelFor('post').getProperties(['name', 'text'])));
+        controller.setProperties((this.modelFor('post').getProperties(['title', 'link', 'description', 'pubDate'])));
     },
     actions: {
         update: function() {
             var self = this;
             post = this.modelFor('post')
-            post.setProperties(this.controller.getProperties(['name', 'text']));
+            post.setProperties(this.controller.getProperties(['title', 'link', 'description', 'pubDate']));
             post.save().then(function(post) {
                 self.transitionTo('post', post);
             });
