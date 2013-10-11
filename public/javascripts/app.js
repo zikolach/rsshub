@@ -17,7 +17,8 @@ App.Router.map(function() {
         });
     });
     this.resource('tags', function() {
-        this.resource('tag', { path: ':tag_name'});
+        this.route('show');
+        this.resource('tag', { path: ':tag_id'});
     });
 });
 

@@ -11,7 +11,7 @@ case class Post(id: Option[Long],
                 text: String,
                 fingerprint: Option[Array[Int]],
                 distance: Option[Double],
-                tags: Option[List[String]])
+                tags: Option[List[Long]])
 
 object Post {
 
@@ -34,13 +34,19 @@ object Post {
 
   def all(): List[Post] = DB.withConnection {
     implicit c => SQL("select * from posts").as(post *)
-  }.map(p => Post(p.id, p.name, p.text, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(t => t.name))))
+  }.map(p => Post(p.id, p.name, p.text, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
 
   def get(id: Long): Post = DB.withConnection {
     implicit c => SQL("select * from posts where id = {id}").on(
       'id -> id
     ).as(post single)
+  } match {
+    case Post(id, name, text, fingerprint, distance, tags) => Post(id, name, text, fingerprint, distance, Some(Tag.find(id.get).map(_.id)))
   }
+
+  def get(ids: List[Long]): List[Post] = DB.withConnection {
+    implicit c => SQL("select * from posts where id in (%s)" format ids.mkString(",")).as(post *)
+  }.map(p => Post(p.id, p.name, p.text, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
 
   def create(name: String, text: String, fingerprint: Array[Int]): Long = DB.withConnection {
     implicit c => SQL("insert into posts(name, text, fingerprint) values ({name}, {text}, {fingerprint})").on(

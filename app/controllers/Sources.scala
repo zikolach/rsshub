@@ -47,7 +47,7 @@ object Sources extends Controller {
 
   def delete(id: Long) = Action {
     Source.delete(id)
-    Ok(Json.toJson(new PostWrapper(None)))
+    Ok(Json.toJson(SourceWrapper(None)))
   }
 
 }

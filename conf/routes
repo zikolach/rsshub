@@ -8,11 +8,11 @@ GET     /test                       controllers.Application.test
 
 
 # Sources
-GET     /api/v1/sources               controllers.Sources.index
-GET     /api/v1/sources/:id           controllers.Sources.get(id: Long)
-POST    /api/v1/sources               controllers.Sources.create
-PUT     /api/v1/sources/:id           controllers.Sources.update(id: Long)
-DELETE  /api/v1/sources/:id           controllers.Sources.delete(id: Long)
+GET     /api/v1/sources             controllers.Sources.index
+GET     /api/v1/sources/:id         controllers.Sources.get(id: Long)
+POST    /api/v1/sources             controllers.Sources.create
+PUT     /api/v1/sources/:id         controllers.Sources.update(id: Long)
+DELETE  /api/v1/sources/:id         controllers.Sources.delete(id: Long)
 
 # Posts
 GET     /api/v1/posts               controllers.Posts.index
@@ -23,6 +23,7 @@ DELETE  /api/v1/posts/:id           controllers.Posts.delete(id: Long)
 
 # Tags
 GET     /api/v1/tags                controllers.Tags.index
+GET     /api/v1/tags/:id            controllers.Tags.get(id: Long)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

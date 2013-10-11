@@ -66,8 +66,8 @@
             <li>
                 {{#linkTo "post" id}}{{name}}{{/linkTo}} (distance: {{distance}})
                 <br/>
-                {{#each tags}}
-                    <small>{{this}}</small>
+                {{#each tag in tags}}
+                    <small>{{#linkTo "tag" tag}}{{tag.name}}{{/linkTo}}</small>
                 {{/each}}
             </li>
             {{/each}}
@@ -86,7 +86,11 @@
         {{#linkTo "post.edit" id}}Edit{{/linkTo}}
         {{#linkTo "post.delete" id}}Delete{{/linkTo}}
         <h3>{{name}}</h3>
-        <hr>
+        <br/>
+        {{#each tag in tags}}
+        <small>{{#linkTo "tag" tag}}{{tag.name}}{{/linkTo}}</small>
+        {{/each}}
+        <hr/>
         {{{text}}}
         {{outlet}}
     </script>
@@ -106,17 +110,35 @@
 
     <script type="text/x-handlebars" data-template-name="tags">
         <h1>Tags</h1>
+        {{#linkTo "tags.show"}}Show{{/linkTo}}
+        {{outlet}}
+    </script>
+
+    <script type="text/x-handlebars" data-template-name="tags/show">
+        {{input value=criteria}}
+        <button {{action "search" criteria }}>Search</button>
+        <hr>
         <nl>
-        {{#each controller}}
+            {{#each tag in controller}}
             <li>
-            {{#linkTo "tag" name}}
-                {{name}}
-            {{/linkTo}}
-            ({{posts.length}})
+                {{#linkTo "tag" tag}}
+                {{tag.name}}
+                {{/linkTo}}
+                ({{tag.posts.length}})
             </li>
+            {{/each}}
+        </nl>
+    </script>
+
+    <script type="text/x-handlebars" data-template-name="tag">
+        <h2>Tag</h2>
+        <h3>{{name}}</h3>
+        <hr>
+        <nl>
+        {{#each post in posts}}
+            <li>{{#linkTo "post" post}}{{post.name}}{{/linkTo}}</li>
         {{/each}}
         </nl>
-        {{outlet}}
     </script>
 
     <script src="@routes.Assets.at("javascripts/jquery-1.10.2.js")" type="text/javascript"></script>
