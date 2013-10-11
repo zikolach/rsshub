@@ -24,3 +24,12 @@ App.Router.map(function() {
 App.ApplicationAdapter = DS.RESTAdapter.extend({
     namespace: 'api/v1'
 });
+
+App.ArrayTransform = DS.Transform.extend({
+    deserialize: function(deserialized) {
+        return deserialized;
+    },
+    serialize: function(serialized) {
+        return serialized;
+    }
+});

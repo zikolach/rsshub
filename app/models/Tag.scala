@@ -5,15 +5,15 @@ import play.api.db.DB
 import anorm._
 import SqlParser._
 
-case class Tag(id: Long, name: String)
+case class Tag(id: Long, name: String, posts: Option[List[Long]])
 
 object Tag {
 
-  val tag = long("id") ~ str("name") map { case id~name => Tag(id, name) }
+  val tag = long("id") ~ str("name") map { case id~name => Tag(id, name, None) }
 
   def all(): List[Tag] = DB.withConnection {
     implicit c => SQL("select * from tags").as(tag *)
-  }
+  }.map(t => Tag(t.id, t.name, Some(Post.findPosts(t.id).map(p => p.id.get))))
 
   def find(name: String): Option[Tag] = DB.withConnection {
     implicit c => SQL("select * from tags where name = {name}").on(

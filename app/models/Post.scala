@@ -15,7 +15,7 @@ case class Post(id: Option[Long],
 
 object Post {
 
-//  implicit def columnToArray: Column[Array[Int]] = Column.nonNull[Array[Int]] { (value, meta) =>
+  //  implicit def columnToArray: Column[Array[Int]] = Column.nonNull[Array[Int]] { (value, meta) =>
 //    val MetaDataItem(qualified, nullable, clazz) = meta
 //    println(value.getClass)
 //    value match {
@@ -86,4 +86,15 @@ object Post {
     ).executeInsert()
   }
 
+  def findPosts(tagId: Long): List[Post] = DB.withConnection {
+    implicit c => SQL(
+      """
+        |select p.*
+        |from posts p
+        |inner join post_tags pt on pt.post_id = p.id
+        |where pt.tag_id = {tag_id}
+      """.stripMargin).on(
+      'tag_id -> tagId
+    ).as(post *)
+  }
 }

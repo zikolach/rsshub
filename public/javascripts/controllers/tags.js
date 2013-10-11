@@ -5,6 +5,6 @@ App.TagsRoute = Ember.Route.extend({
 });
 
 App.TagsController = Ember.ArrayController.extend({
-    sortProperties: ['name'],
-    sortAscending: true
+    sortProperties: ['posts.length', 'name'],
+    sortAscending: false
 });
