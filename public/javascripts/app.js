@@ -3,7 +3,6 @@ var App = Ember.Application.create();
 App.Router.map(function() {
     this.resource('posts', function() {
         this.route('search');
-//        this.resource('tags',)
         this.route('new');
         this.resource('post', { path: ':post_id' }, function() {
             this.route('edit');
@@ -16,6 +15,9 @@ App.Router.map(function() {
             this.route('edit');
             this.route('delete');
         });
+    });
+    this.resource('tags', function() {
+        this.resource('tag', { path: ':tag_name'});
     });
 });
 

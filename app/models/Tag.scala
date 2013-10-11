@@ -11,6 +11,10 @@ object Tag {
 
   val tag = long("id") ~ str("name") map { case id~name => Tag(id, name) }
 
+  def all(): List[Tag] = DB.withConnection {
+    implicit c => SQL("select * from tags").as(tag *)
+  }
+
   def find(name: String): Option[Tag] = DB.withConnection {
     implicit c => SQL("select * from tags where name = {name}").on(
       'name -> name
