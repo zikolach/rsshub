@@ -15,17 +15,17 @@ object Tags extends Controller {
   implicit val tagWrapperFormat = Json.format[TagWrapper]
 
   def index = Action {
-    request => {
+    request =>
       request.queryString.get("ids[]") match {
         case Some(ids) => {
           val tags = Tag.get(ids.toList.map(_.toLong))
           val postIds = tags.map(_.posts.get).flatten
           Ok(Json.toJson(new TagsWrapper(tags, Post.get(postIds))))
         }
-        case None => {
+        case None =>
           request.getQueryString("search") match {
             case Some(search) =>
-              val reg = "(?iu)(.*)" + search + "(.*)"
+              val reg = "(?iu)(.*)%s(.*)".format(search)
               val tags = Tag.all().filter(_.name.matches(reg))
               Ok(Json.toJson(TagsWrapper(tags, Post.get(tags.map(_.posts.get).flatten))))
             case None => {
@@ -34,9 +34,7 @@ object Tags extends Controller {
               Ok(Json.toJson(new TagsWrapper(tags, Post.get(postIds))))
             }
           }
-        }
       }
-    }
   }
 
   def get(id: Long) = Action {
