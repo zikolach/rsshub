@@ -23,7 +23,7 @@ App.SourceEditRoute = Ember.Route.extend({
     actions: {
         update: function() {
             var self = this;
-            source = this.modelFor('source')
+            var source = this.modelFor('source')
             source.setProperties(this.controller.getProperties(['name', 'url']));
             source.save().then(function(source) {
                 self.transitionTo('source', source);
@@ -36,11 +36,16 @@ App.SourceDeleteRoute = Ember.Route.extend({
     actions: {
         delete: function() {
             var self = this;
-            source = this.modelFor('source');
+            var source = this.modelFor('source');
             source.deleteRecord();
             source.save().then(function(source) {
                 self.transitionTo('sources');
             });
+        },
+        cancel: function() {
+            var self = this;
+            var source = this.modelFor('source');
+            self.transitionTo('source', source);
         }
     }
 });

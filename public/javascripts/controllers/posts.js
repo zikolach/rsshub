@@ -1,10 +1,10 @@
-App.PostsRoute = Ember.Route.extend({
+App.PostsIndexRoute = Ember.Route.extend({
 //   model: function() {
 //        return this.store.findQuery("post");
 //   }
-//    redirect: function() {
-//        this.transitionTo("posts.search");
-//    }
+    redirect: function() {
+        this.transitionTo("posts.search");
+    }
 });
 
 App.PostsSearchController = Ember.ArrayController.extend({
@@ -54,6 +54,11 @@ App.PostDeleteRoute = Ember.Route.extend({
             post.save().then(function() {
                 self.transitionTo('posts');
             });
+        },
+        cancel: function() {
+            var self = this;
+            post = this.modelFor('post');
+            self.transitionTo('post', post);
         }
     }
 });

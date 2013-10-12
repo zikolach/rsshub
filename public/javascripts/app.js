@@ -34,3 +34,9 @@ App.ArrayTransform = DS.Transform.extend({
         return serialized;
     }
 });
+
+App.IndexRoute = Ember.Route.extend({
+    redirect: function() {
+        this.transitionTo("posts");
+    }
+});

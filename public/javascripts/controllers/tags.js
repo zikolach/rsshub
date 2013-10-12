@@ -1,8 +1,7 @@
-App.TagsShowRoute = Ember.Route.extend({
-// TODO: load default tag set
-//    model: function() {
-//        return this.store.find('tag');
-//    }
+App.TagsIndexRoute = Ember.Route.extend({
+    redirect: function() {
+        this.transitionTo("tags.show");
+    }
 });
 
 App.TagsShowController = Ember.ArrayController.extend({
