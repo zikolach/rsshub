@@ -2,6 +2,9 @@ App.PostsRoute = Ember.Route.extend({
 //   model: function() {
 //        return this.store.findQuery("post");
 //   }
+//    redirect: function() {
+//        this.transitionTo("posts.search");
+//    }
 });
 
 App.PostsSearchController = Ember.ArrayController.extend({
