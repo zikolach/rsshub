@@ -1,4 +1,13 @@
-This is your new Play application
+RSS Hub application readme
 =====================================
+
+Features:
+1. Fetch articles from users feeds (RSS, Atom etc)
+2. Semantic search among articles
+3. Add tags automatically
+4. Search tags
+5. Show semantically related articles
+6. Add comments
+7. Create feeds for comments
 
 This file will be packaged with your application, when using `play dist`.
