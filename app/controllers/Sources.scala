@@ -24,9 +24,9 @@ object Sources extends Controller {
   def create = Action(parse.json) {
     implicit request =>
       request.body.validate[SourceWrapper].map {
-        case SourceWrapper(Some(Source(id, name, text))) => {
+        case SourceWrapper(Some(Source(id, name, text, None))) => {
           val id: Long = Source.create(name, text)
-          Ok(Json.toJson(new SourceWrapper(Some(new Source(Some(id), name, text)))))
+          Ok(Json.toJson(new SourceWrapper(Some(new Source(Some(id), name, text, None)))))
         }
       }.recoverTotal{
         e => BadRequest("Error: " + JsError.toFlatJson(e))
@@ -36,9 +36,9 @@ object Sources extends Controller {
   def update(id: Long) = Action(parse.json) {
     implicit request =>
       request.body.validate[SourceWrapper].map {
-        case SourceWrapper(Some(Source(None, name, text))) => {
+        case SourceWrapper(Some(Source(None, name, text, None))) => {
           Source.update(id, name, text)
-          Ok(Json.toJson(new SourceWrapper(Some(new Source(Some(id), name, text)))))
+          Ok(Json.toJson(new SourceWrapper(Some(new Source(Some(id), name, text, None)))))
         }
       }.recoverTotal{
         e => BadRequest("Error: " + JsError.toFlatJson(e))

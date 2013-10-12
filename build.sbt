@@ -8,8 +8,10 @@ libraryDependencies ++= Seq(
   cache
 )
 
-//libraryDependencies += "rome" % "rome" % "1.0"
 libraryDependencies +=
   "net.databinder.dispatch" %% "dispatch-core" % "0.11.0"
+
+libraryDependencies +=
+  "rome" % "rome" % "1.0"
 
 play.Project.playScalaSettings

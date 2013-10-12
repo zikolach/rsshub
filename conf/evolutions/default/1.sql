@@ -9,7 +9,9 @@ CREATE TABLE posts (
     link        varchar(1000),
     description text,
     pub_date    date,
-    fingerprint text
+    fingerprint text,
+    PRIMARY KEY (id),
+    UNIQUE (link)
 );
 
 # --- !Downs

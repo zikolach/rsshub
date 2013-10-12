@@ -11,11 +11,32 @@ import java.net.{HttpURLConnection, URL}
 import scala.xml.{Node, XML}
 import util.{CeptAPI, FeedReader}
 import java.text.{DateFormat, SimpleDateFormat}
+import java.util.Date
 
-case class Source(id: Option[Long], name: String, url: String)
+case class Source(id: Option[Long], name: String, url: String, fetchDate: Option[Date]) {
+  def fetch: Unit = {
+    FeedReader.readEntries(url).foreach((entry) => {
+      println(entry._1)
+      val title = Source.norm_str(entry._1)
+      val fp = CeptAPI.bitmap(title)
+      val id = Post.create(title, entry._2, entry._3, entry._4, fp.get.positions)
+      val sims = CeptAPI.findSimilar(title, 10, 0, 0, 1, "N", 0.95).get
+      sims.foreach(sim => Post.addTag(id, sim.term))
+    })
+    DB.withConnection {
+      implicit c => {
+        SQL("update sources set fetch_date = {fetch_date} where id = {id}").on(
+          'fetch_date -> new Date(),
+          'id -> id
+        )
+      }
+    }
+  }
+}
 
 object Source {
-  val source = long("id") ~ str("name") ~ str("url") map { case id~name~url => Source(Some(id), name, url)}
+
+  val source = long("id") ~ str("name") ~ str("url") ~ SqlParser.get[Option[Date]]("fetch_date") map { case id~name~url~fd => Source(Some(id), name, url, fd)}
 
   def norm_str(s: String): String = {
     val res = s.replaceAll("[^\\w\\d\\s]", "")
@@ -24,12 +45,14 @@ object Source {
 
   def all(): List[Source] = DB.withConnection {
     implicit c => SQL("select * from sources").as(source *)
-  }
+  }.map(s => Source(s.id, s.name, s.url, None))
 
   def get(id: Long): Source = DB.withConnection {
     implicit c => SQL("select * from sources where id = {id}").on(
       'id -> id
     ).as(source single)
+  } match {
+    case Source(id, name, url, _) => Source(id, name, url, None)
   }
 
   def create(name: String, url: String): Long = DB.withConnection {
@@ -39,7 +62,7 @@ object Source {
     ).executeInsert()
   } match {
     case Some(long: Long) => {
-      fetch(long)
+//      fetch(long)
       long
     }
     case None => -1
@@ -62,19 +85,14 @@ object Source {
   private def fetch(id: Long): Unit = DB.withConnection {
     implicit c => {
       val s = SQL("select * from sources where id = {id}").on( 'id -> id ).as(source single)
-      val df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z")
-      FeedReader.readEntries(s.url).foreach((entry) => {
-        println(entry._1)
-        val title = norm_str(entry._1)
-        val fp = CeptAPI.bitmap(title)
-        // Fri, 11 Oct 2013 18:25:00 GMT
-        // "EEE, d MMM yyyy HH:mm:ss Z"
-        println(entry._4)
-        val dt = df.parse(entry._4)
-        val id = Post.create(title, entry._2, entry._3, dt, fp.get.positions)
-        val sims = CeptAPI.findSimilar(title, 10, 0, 0, 1, "N", 0.95).get
-        sims.foreach(sim => Post.addTag(id, sim.term))
-      })
+      s.fetch
     }
   }
+
+  def next: Option[Source] = DB.withConnection {
+    implicit c => {
+      SQL("select * from sources order by fetch_date nulls first limit 1").as(source singleOpt)
+    }
+  }
+
 }
