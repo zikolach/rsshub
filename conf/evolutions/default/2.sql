@@ -7,7 +7,8 @@ CREATE TABLE sources (
     id integer NOT NULL DEFAULT nextval('sources_id_seq'),
     name varchar(255),
     url varchar(1000),
-    fetch_date date
+    fetch_date date,
+    PRIMARY KEY (id)
 );
 
 # --- !Downs

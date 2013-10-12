@@ -5,7 +5,8 @@
 CREATE SEQUENCE tags_id_seq;
 CREATE TABLE tags (
     id integer NOT NULL DEFAULT nextval('tags_id_seq'),
-    name varchar(255)
+    name varchar(255),
+    PRIMARY KEY (id)
 );
 CREATE TABLE post_tags (
     post_id integer NOT NULL,
