@@ -11,3 +11,5 @@ Features:
 7. Create feeds for comments
 
 This file will be packaged with your application, when using `play dist`.
+
+Live Demo: http://rsshub.herokuapp.com/
