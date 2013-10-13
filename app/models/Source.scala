@@ -1,27 +1,29 @@
 package models
 
 import anorm.SqlParser._
-import scala.Some
 import anorm._
 import play.api.db.DB
 import anorm.~
 import scala.Some
 import play.api.Play.current
-import java.net.{HttpURLConnection, URL}
-import scala.xml.{Node, XML}
 import util.{CeptAPI, FeedReader}
-import java.text.{DateFormat, SimpleDateFormat}
 import java.util.Date
 
 case class Source(id: Option[Long], name: String, url: String, fetchDate: Option[Date]) {
-  def fetch: Unit = {
+  def fetch(): Unit = {
     FeedReader.readEntries(url).foreach((entry) => {
       println(entry._1)
       val title = Source.norm_str(entry._1)
-      val fp = CeptAPI.bitmap(title)
-      val id = Post.create(title, entry._2, entry._3, entry._4, fp.get.positions)
-      val sims = CeptAPI.findSimilar(title, 10, 0, 0, 1, "N", 0.95).get
-      sims.foreach(sim => Post.addTag(id, sim.term))
+      val link = entry._2
+      Post.findPost(link) match {
+        case Some(p: Post) => {}
+        case None => {
+          val fp = CeptAPI.bitmap(title)
+          val id = Post.create(title, link, entry._3, entry._4, fp.get.positions)
+          val sims = CeptAPI.findSimilar(title, 10, 0, 0, 1, "N", 0.95).get
+          sims.foreach(sim => Post.addTag(id, sim.term))
+        }
+      }
     })
     DB.withConnection {
       implicit c => {
@@ -52,20 +54,18 @@ object Source {
       'id -> id
     ).as(source single)
   } match {
-    case Source(id, name, url, _) => Source(id, name, url, None)
+    case s: Source => Source(s.id, s.name, s.url, None)
   }
 
   def create(name: String, url: String): Long = DB.withConnection {
-    implicit c => SQL("insert into sources(name, url) values ({name}, {url})").on(
-      'name -> name,
-      'url -> url
-    ).executeInsert()
-  } match {
-    case Some(long: Long) => {
-//      fetch(long)
-      long
+    implicit c => {
+      val id: Option[Long] =
+        SQL("insert into sources(name, url) values ({name}, {url})").on(
+          'name -> name,
+          'url -> url
+        ).executeInsert()
+      id.get
     }
-    case None => -1
   }
 
   def update(id: Long, name: String, url: String) = DB.withConnection {
@@ -80,13 +80,6 @@ object Source {
     implicit  c => SQL("delete sources where id = {id}").on(
       'id -> id
     ).executeUpdate()
-  }
-
-  private def fetch(id: Long): Unit = DB.withConnection {
-    implicit c => {
-      val s = SQL("select * from sources where id = {id}").on( 'id -> id ).as(source single)
-      s.fetch
-    }
   }
 
   def next: Option[Source] = DB.withConnection {

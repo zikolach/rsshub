@@ -26,7 +26,7 @@ object Tag {
       'id -> id
     ).as(tag single)
   } match {
-    case Tag(id, name, None) => Tag(id, name, Some(Post.findPosts(id).map(_.id.get)))
+    case t: Tag => Tag(t.id, t.name, Some(Post.findPosts(id).map(_.id.get)))
   }
 
   def get(ids: List[Long]): List[Tag] = DB.withConnection {
@@ -34,11 +34,13 @@ object Tag {
   }.map(t => Tag(t.id, t.name, Some(Post.findPosts(t.id).map(p => p.id.get))))
 
   def create(name: String): Long = DB.withConnection {
-    implicit c => SQL("insert into tags(name) values ({name})").on(
-      'name -> name
-    ).executeInsert()
-  } match {
-    case Some(long: Long) => long
+    implicit c => {
+      val id: Option[Long] =
+        SQL("insert into tags(name) values ({name})").on(
+          'name -> name
+        ).executeInsert()
+      id.get
+    }
   }
 
   def delete(id: Long): Unit = DB.withConnection {
