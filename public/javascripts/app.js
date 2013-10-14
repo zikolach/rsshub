@@ -40,3 +40,8 @@ App.IndexRoute = Ember.Route.extend({
         this.transitionTo("posts");
     }
 });
+
+Ember.Handlebars.helper('from-now', function(value) {
+  if (value) return moment(value).fromNow();
+  return "newer";
+});

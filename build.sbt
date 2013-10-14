@@ -17,4 +17,7 @@ libraryDependencies +=
 libraryDependencies +=
   "postgresql" % "postgresql" % "9.1-901-1.jdbc4"
 
+libraryDependencies +=
+  "org.jsoup" % "jsoup" % "1.7.2"
+
 play.Project.playScalaSettings
