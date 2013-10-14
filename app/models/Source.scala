@@ -33,7 +33,7 @@ case class Source(id: Option[Long], name: String, url: String, fetchDate: Option
     DB.withConnection {
       implicit c => {
         SQL("update sources set fetch_date = {fetch_date} where id = {id}").on(
-          'fetch_date -> Some(new Date()),
+          'fetch_date -> new Date(),
           'id -> id
         ).executeUpdate()
       }
