@@ -49,7 +49,7 @@ object Source {
 
   val source = long("id") ~ str("name") ~ str("url") ~ SqlParser.get[Option[Date]]("fetch_date") map { case id~name~url~fd => Source(Some(id), name, url, fd)}
 
-  def normalizeString(s: String): String = Jsoup.parse(s).body().text().replaceAll("[^\\w\\d\\s]", "").replaceAll("\\s+", " ")
+  def normalizeString(s: String): String = Jsoup.parse(s).body().text().replaceAll("[^\\p{L}\\p{Nd}\\s]", "").replaceAll("\\s+", " ")
 
   def all(): List[Source] = DB.withConnection {
     implicit c =>
