@@ -43,5 +43,5 @@ App.IndexRoute = Ember.Route.extend({
 
 Ember.Handlebars.helper('from-now', function(value) {
   if (value) return moment(value).fromNow();
-  return "newer";
+  return "never";
 });
