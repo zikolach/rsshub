@@ -1,6 +1,7 @@
 package util
 import dispatch._, Defaults._
 import play.api.libs.json.Json
+import play.api.Logger
 
 
 object CeptAPI {
@@ -43,13 +44,24 @@ object CeptAPI {
       .addQueryParameter("app_key", appKey)
 
   def bitmap(term: String): Option[Bitmap] = {
-    val res = Http(bitmapSvc(term) OK as.String)
-    val json = res()
-    Json.parse(json).validate[BitmapResponse].map(
-      r => Some(r.bitmap)
-    ).recoverTotal(
-      e => None
-    )
+    Logger.info("Get bitmap for: %s".format(term))
+    val res = Http(bitmapSvc(term) OK as.String).option
+    res() match {
+      case Some(json) => {
+        Json.parse(json).validate[BitmapResponse].map(
+          r => Some(r.bitmap)
+        ).recoverTotal(
+          e => {
+            Logger.error("Error occurred while parsing json")
+            None
+          }
+        )
+      }
+      case None => {
+        Logger.error("Error occurred while getting bitmap")
+        None
+      }
+    }
   }
 
   def compareSimilarity(a: Array[Int], b: Array[Int]): CompareResult = {

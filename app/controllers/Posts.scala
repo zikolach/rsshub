@@ -24,12 +24,17 @@ object Posts extends Controller {
         case None =>
           request.getQueryString("search") match {
             case Some(search) => {
-              val searchBitmap: Array[Int] = CeptAPI.bitmap(search).get.positions
-              val posts = Post.all().map(
-                post => Post(post.id, post.title, post.link, post.description, post.pubDate, None, Some(CeptAPI.compareSimilarity(post.fingerprint.get, searchBitmap).distance), post.tags)
-              ).filter(_.distance.get < 0.9).sortWith((a, b) => a.distance.get < b.distance.get)
-              val tagIds = posts.map(p => p.tags.get).flatten
-              Ok(Json.toJson(PostsWrapper(posts, Tag.get(tagIds))))
+              CeptAPI.bitmap(search) match {
+                case Some(bitmap) => {
+                  val searchBitmap: Array[Int] = bitmap.positions
+                  val posts = Post.all().map(
+                    post => Post(post.id, post.title, post.link, post.description, post.pubDate, None, Some(CeptAPI.compareSimilarity(post.fingerprint.get, searchBitmap).distance), post.tags)
+                  ).filter(_.distance.get < 0.9).sortWith((a, b) => a.distance.get < b.distance.get)
+                  val tagIds = posts.map(p => p.tags.get).flatten
+                  Ok(Json.toJson(PostsWrapper(posts, Tag.get(tagIds))))
+                }
+                case None => Ok(Json.toJson(PostsWrapper(Nil, Nil)))
+              }
             }
             case None => Ok(Json.toJson(PostsWrapper(Nil, Nil)))
           }
