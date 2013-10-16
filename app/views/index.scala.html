@@ -353,7 +353,7 @@
             <h2>Logout</h2>
             Are you sure?
             <button class="btn btn-danger" {{action "logout"}}>Logout&nbsp;<span class="glyphicon glyphicon-logout"></span></button>
-            <button class="btn btn-default" {{action "cancel"}}>Cancel</button>
+            {{#link-to "index" tagName="button" class="btn btn-default"}}Cancel{{/link-to}}
         </div>
     </script>
 
