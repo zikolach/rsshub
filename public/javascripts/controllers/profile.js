@@ -8,6 +8,8 @@ App.LoginRoute = Ember.Route.extend({
                 if (!rememberMe)
                     self.auth.get('module.rememberable').forget();
                 self.controllerFor('application').alert(res.message);
+            }, function(err) {
+                self.controllerFor('application').alert(err.message);
             });
         }
     }
@@ -28,8 +30,8 @@ App.RegisterRoute = Ember.Route.extend({
                         self.controllerFor('application').alert(res.message);
                         self.transitionTo("login");
                     },
-                    function(res) {
-                        console.log(res.responseJSON.message);
+                    function(err) {
+                        self.controllerFor('application').alert(err.responseJSON.message);
                     }
                 );
             }
@@ -45,6 +47,8 @@ App.LogoutRoute = Ember.Route.extend({
             var auth = this.get('auth');
             auth.signOut().then(function(res) {
                 self.controllerFor('application').alert(res.message);
+            }, function(err) {
+                self.controllerFor('application').alert(err.responseJSON.message);
             });
         }
     }
@@ -52,9 +56,9 @@ App.LogoutRoute = Ember.Route.extend({
 
 App.ProfileRoute = Ember.Route.extend({
     authRedirectable: true,
-//    redirect: function() {
-//        this.transitionTo("profile.show");
-//    }
+    model: function() {
+        return this.store.find('user', this.auth.get('userId'));
+    }
 });
 
 App.ProfileShowRoute = Ember.Route.extend({
@@ -63,9 +67,26 @@ App.ProfileShowRoute = Ember.Route.extend({
 
 App.ProfileEditRoute = Ember.Route.extend({
     authRedirectable: true,
-    model: function() {
-        return this.store.find('user', this.auth.get('userId'));
+    setupController: function(controller) {
+        controller.setProperties(this.modelFor('profile').getProperties(['name']))
+    },
+    actions: {
+        update: function() {
+            var self = this;
+            var user = this.modelFor('profile');
+            var passwords = this.controller.getProperties(['password', 'confirmation']);
+            if (passwords.password || passwords.confirmation)
+                if (passwords.password !== passwords.confirmation) {
+                    this.controllerFor('application').alert('Password and confirmation must be equal');
+                    return;
+                } else {
+                    user.set('password', passwords.password);
+                    user.save().then(function() {
+                        self.controller.set('password', '')
+                        self.controller.set('confirmation', '')
+                        self.transitionTo("profile.show");
+                    });
+                }
+        }
     }
 });
-
-//App.ProfileEditController = Ember.ObjectController.extend({});

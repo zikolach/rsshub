@@ -53,7 +53,7 @@ object Auth extends  Controller {
           User.login(name, password, request.remoteAddress) match {
             case Some(token) => Ok(Json.toJson(AuthResponse(
               Some(token.token),
-              Some(User.getByToken(token.token).get.id),
+              Some(User.getByToken(token.token).get.id.get),
               Some("Successfully logged in")
             )))
             case None => BadRequest(Json.toJson(AuthResponse(None, None, Some("Can't login"))))
@@ -63,10 +63,10 @@ object Auth extends  Controller {
           User.getByToken(token) match {
             case Some(user) => Ok(Json.toJson(AuthResponse(
               Some(token),
-              Some(user.id),
+              Some(user.id.get),
               Some("Successfully logged in")
             )))
-            case None => BadRequest(Json.toJson(AuthResponse(None, None, Some("Can't create user"))))
+            case None => BadRequest(Json.toJson(AuthResponse(None, None, Some("Can't login"))))
           }
         }
       }).recoverTotal(

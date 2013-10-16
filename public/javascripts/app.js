@@ -69,6 +69,18 @@ App.ArrayTransform = DS.Transform.extend({
     }
 });
 
+App.IsoDateTransform = DS.Transform.extend({
+    deserialize: function(deserialized) {
+        return deserialized;
+    },
+    serialize: function(serialized) {
+//        var m = moment(serialized)
+//        return m.unix()*1000 + m.milliseconds();
+        return serialized;
+    }
+});
+
+
 App.IndexRoute = Ember.Route.extend({
 });
 

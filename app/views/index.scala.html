@@ -103,6 +103,7 @@
             <div class="form-group">
                 <div class="col-lg-offset-2 col-lg-10">
                     <button type="submit" class="btn btn-primary" {{action "create"}}>Create&nbsp;<span class="glyphicon glyphicon-save"></span></button>
+                    {{#link-to "sources.index" tagName="button" class="btn btn-default"}}Cancel{{/link-to}}
                 </div>
             </div>
         </form>
@@ -196,6 +197,7 @@
             <div class="form-group">
                 <div class="col-lg-offset-2 col-lg-10">
                     <button type="submit" class="btn btn-primary" {{action "create"}}>Create&nbsp;<span class="glyphicon glyphicon-save"></span></button>
+                    {{#link-to "posts.search" tagName="button" class="btn btn-default"}}Cancel{{/link-to}}
                 </div>
             </div>
         </form>
@@ -362,7 +364,7 @@
 
     <script type="text/x-handlebars" data-template-name="profile/show">
         <ul class="nav nav-pills pull-right">
-            {{#link-to "profile.edit" tagName="li"}}<a href="#">Edit&nbsp;<span class="glyphicon glyphicon-edit"></span></a>{{/link-to}}
+            {{#link-to "profile.edit" tagName="li"}}<a href="#">Change password&nbsp;<span class="glyphicon glyphicon-edit"></span></a>{{/link-to}}
         </ul>
         <div class="row">
             <div class="col-lg-2">Username</div><div class="col-lg-4">{{auth.user.name}}</div>
@@ -374,7 +376,12 @@
 
     <script type="text/x-handlebars" data-template-name="profile/edit">
         <form class="form-horizontal" role="form">
-            {{partial "user_form"}}
+            <div class="form-group">
+                <label for="inputPassword" class="col-lg-2 control-label">Password</label>
+                <div class="col-lg-4">
+                    {{input type="password" id="inputPassword" class="form-control" placeholder="Password" value=password}}
+                </div>
+            </div>
             <div class="form-group">
                 <label for="inputConfirmation" class="col-lg-2 control-label">Confirmation</label>
                 <div class="col-lg-4">
@@ -384,6 +391,7 @@
             <div class="form-group">
                 <div class="col-lg-offset-2 col-lg-10">
                     <button type="submit" class="btn btn-primary" {{action "update"}}>Update&nbsp;<span class="glyphicon glyphicon-save"></span></button>
+                    {{#link-to "profile.show" tagName="button" class="btn btn-default"}}Cancel{{/link-to}}
                 </div>
             </div>
         </form>
