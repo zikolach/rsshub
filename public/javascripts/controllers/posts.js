@@ -1,9 +1,9 @@
 App.PostsRoute = Ember.Route.extend({
     authRedirectable: true,
-     redirect: function() {
-        console.log(this);
+//     redirect: function() {
+//        console.log(this);
 //         this.transitionTo("posts.search");
-     }
+//     }
  });
 
 App.PostsIndexRoute = Ember.Route.extend({
