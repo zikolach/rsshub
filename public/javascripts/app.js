@@ -1,4 +1,6 @@
-var App = Ember.Application.create();
+var App = Ember.Application.create({
+    LOG_TRANSITIONS: true,
+});
 
 App.Router.map(function() {
     this.resource('posts', function() {
@@ -20,6 +22,38 @@ App.Router.map(function() {
         this.route('show');
         this.resource('tag', { path: ':tag_id'});
     });
+
+    this.resource('profile', function() {
+        this.route('show');
+        this.route('edit');
+    });
+    this.route('login');
+    this.route('register');
+    this.route('logout');
+});
+
+App.ApplicationRoute = Ember.Route.extend({
+});
+
+App.ApplicationController = Ember.Controller.extend({
+    alert: function(message) {
+        this.set('message', message);
+    },
+    messageObserver: function() {
+        var message = this.get('message');
+        if (message)
+            if (message.match(/success/gi))
+                this.set('messageClass', 'alert-success');
+            else
+                this.set('messageClass', 'alert-warning');
+        else
+            this.set('messageClass', null);
+    }.observes('message'),
+    actions: {
+        close: function() {
+            this.set('message', null);
+        }
+    }
 });
 
 App.ApplicationAdapter = DS.RESTAdapter.extend({
@@ -36,12 +70,55 @@ App.ArrayTransform = DS.Transform.extend({
 });
 
 App.IndexRoute = Ember.Route.extend({
-    redirect: function() {
-        this.transitionTo("posts");
-    }
 });
 
 Ember.Handlebars.helper('from-now', function(value) {
   if (value) return moment(value).fromNow();
-  return "never";
+  return 'never';
+});
+
+$.postJSON = function(url, data, callback) {
+    return jQuery.ajax({
+        'type': 'POST',
+        'url': url,
+        'contentType': 'application/json',
+        'data': JSON.stringify(data),
+        'dataType': 'json',
+        'success': callback
+    });
+};
+
+
+App.Auth = Em.Auth.extend({
+    request: 'jquery',
+    response: 'json',
+    strategy: 'token',
+    tokenKey: 'token',
+    tokenIdKey: 'userId',
+    tokenLocation: 'customHeader',
+    tokenHeaderKey: 'token',
+    session: 'cookie',
+    signInEndPoint: '/api/v1/login',
+    signOutEndPoint: '/api/v1/logout',
+    modules: ['emberData', 'authRedirectable', 'rememberable', 'actionRedirectable'],
+    emberData: {
+        userModel: 'user'
+    },
+    authRedirectable: {
+        route: 'login'
+    },
+    rememberable: {
+        tokenKey: 'token',
+        period: 365,
+        autoRecall: true
+    },
+    actionRedirectable: {
+        signInRoute: 'profile',
+        signInSmart: true,
+        signInBlacklist: [
+          'register',
+          'login'
+        ],
+        signOutRoute: 'index'
+    }
 });

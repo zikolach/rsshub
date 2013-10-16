@@ -28,8 +28,8 @@
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse navbar-ex1-collapse">
                 <ul class="nav navbar-nav">
-                    {{#link-to "posts" tagName="li"}}<a href="#">Posts</a>{{/link-to}}
-                    {{#link-to "tags" tagName="li"}}<a href="#">Tags</a>{{/link-to}}
+                    {{#link-to "posts.search" tagName="li"}}<a href="#">Posts</a>{{/link-to}}
+                    {{#link-to "tags.show" tagName="li"}}<a href="#">Tags</a>{{/link-to}}
                     {{#link-to "sources" tagName="li"}}<a href="#">Sources</a>{{/link-to}}
                 </ul>
                 <!--<form class="navbar-form navbar-left" role="search">-->
@@ -38,22 +38,30 @@
                     <!--</div>-->
                     <!--<button type="submit" class="btn btn-default">Submit</button>-->
                 <!--</form>-->
-                <!--ul class="nav navbar-nav navbar-right">
-                    <li><a href="#">Link</a></li>
+                <ul class="nav navbar-nav navbar-right">
+                    {{#if auth.signedIn}}
                     <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{auth.user.name}}<b class="caret"></b></a>
                         <ul class="dropdown-menu">
-                            <li><a href="#">Action</a></li>
-                            <li><a href="#">Another action</a></li>
-                            <li><a href="#">Something else here</a></li>
-                            <li><a href="#">Separated link</a></li>
+                            {{#link-to "profile.show" tagName="li"}}<a href="#">Profile</a>{{/link-to}}
+                            {{#link-to "logout" tagName="li"}}<a href="#">Logout</a>{{/link-to}}
                         </ul>
                     </li>
-                </ul-->
+                    {{else}}
+                    {{#link-to "login" tagName="li"}}<a href="#">Login</a>{{/link-to}}
+                    {{#link-to "register" tagName="li"}}<a href="#">Register</a>{{/link-to}}
+                    {{/if}}
+                </ul>
             </div><!-- /.navbar-collapse -->
         </nav>
         <div class="container">
-        {{outlet}}
+            {{#if message}}
+            <div {{bind-attr class=":alert messageClass"}}>
+            {{message}}
+                <button type="button" class="close pull-right" aria-hidden="true" {{action close}}>&times;</button>
+            </div>
+            {{/if}}
+            {{outlet}}
         </div>
     </script>
 
@@ -286,20 +294,130 @@
         </div>
     </script>
 
+    <script type="text/x-handlebars" data-template-name="user_form">
+        <div class="form-group">
+            <label for="inputUsername" class="col-lg-2 control-label">Username</label>
+            <div class="col-lg-4">
+                {{input id="inputUsername" class="form-control" placeholder="Username" value=name}}
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="inputPassword" class="col-lg-2 control-label">Password</label>
+            <div class="col-lg-4">
+                {{input type="password" id="inputPassword" class="form-control" placeholder="Password" value=password}}
+            </div>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars" data-template-name="register">
+        <form class="form-horizontal" role="form">
+            {{partial "user_form"}}
+            <div class="form-group">
+                <label for="inputConfirmation" class="col-lg-2 control-label">Confirmation</label>
+                <div class="col-lg-4">
+                    {{input type="password" id="inputConfirmation" class="form-control" placeholder="Confirmation" value=confirmation}}
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-lg-offset-2 col-lg-4">
+                    <button type="submit" class="btn btn-default" {{action "register"}}>Register</button>
+                </div>
+            </div>
+        </form>
+    </script>
+
+    <script type="text/x-handlebars" data-template-name="login">
+        <form class="form-horizontal" role="form">
+            {{partial "user_form"}}
+            <div class="form-group">
+                <div class="col-lg-offset-2 col-lg-4">
+                    <div class="checkbox">
+                        <label>
+                            {{input type="checkbox" id="inputRememberMe" checked=rememberMe}} Remember me
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-lg-offset-2 col-lg-4">
+                    <button type="submit" class="btn btn-default" {{action "login"}}>Login</button>
+                </div>
+            </div>
+        </form>
+    </script>
+
+    <script type="text/x-handlebars" data-template-name="logout">
+        <div class="alert alert-warning">
+            <h2>Logout</h2>
+            Are you sure?
+            <button class="btn btn-danger" {{action "logout"}}>Logout&nbsp;<span class="glyphicon glyphicon-logout"></span></button>
+            <button class="btn btn-default" {{action "cancel"}}>Cancel</button>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars" data-template-name="profile">
+        {{outlet}}
+    </script>
+
+
+    <script type="text/x-handlebars" data-template-name="profile/show">
+        <ul class="nav nav-pills pull-right">
+            {{#link-to "profile.edit" tagName="li"}}<a href="#">Edit&nbsp;<span class="glyphicon glyphicon-edit"></span></a>{{/link-to}}
+        </ul>
+        <div class="row">
+            <div class="col-lg-2">Username</div><div class="col-lg-4">{{auth.user.name}}</div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2">Last logged</div><div class="col-lg-4">{{from-now auth.user.lastLoginDate}}</div>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars" data-template-name="profile/edit">
+        <form class="form-horizontal" role="form">
+            {{partial "user_form"}}
+            <div class="form-group">
+                <label for="inputConfirmation" class="col-lg-2 control-label">Confirmation</label>
+                <div class="col-lg-4">
+                    {{input type="password" id="inputConfirmation" class="form-control" placeholder="Confirmation" value=confirmation}}
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-lg-offset-2 col-lg-10">
+                    <button type="submit" class="btn btn-primary" {{action "update"}}>Update&nbsp;<span class="glyphicon glyphicon-save"></span></button>
+                </div>
+            </div>
+        </form>
+    </script>
+
     <script src="@routes.Assets.at("javascripts/jquery-1.10.2.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/bootstrap.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/libs/moment.min.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/libs/moment.twitter.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/libs/jquery.cookie.js")" type="text/javascript"></script>
 
     <script src="@routes.Assets.at("javascripts/handlebars-1.0.0.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/ember.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/ember-data.js")" type="text/javascript"></script>
+
+    <script src="@routes.Assets.at("javascripts/libs/ember-auth.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/libs/ember-auth-request-jquery.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/libs/ember-auth-response-json.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/libs/ember-auth-session-cookie.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/libs/ember-auth-strategy-token.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/libs/ember-auth-module-ember-data.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/libs/ember-auth-module-auth-redirectable.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/libs/ember-auth-module-rememberable.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/libs/ember-auth-module-action-redirectable.js")" type="text/javascript"></script>
+
+
     <script src="@routes.Assets.at("javascripts/app.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/models/post.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/models/source.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/models/tag.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/models/user.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/controllers/posts.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/controllers/sources.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/controllers/tags.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/controllers/profile.js")" type="text/javascript"></script>
 </body>
 </html>

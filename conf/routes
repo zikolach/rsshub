@@ -5,7 +5,13 @@
 # Home page
 GET     /                           controllers.Application.index
 GET     /test                       controllers.Application.test
+POST    /api/v1/register            controllers.Auth.register
+POST    /api/v1/login               controllers.Auth.login
+DELETE  /api/v1/logout              controllers.Auth.logout
 
+# Users
+GET     /api/v1/users               controllers.Users.index
+GET     /api/v1/users/:id           controllers.Users.get(id: Long)
 
 # Sources
 GET     /api/v1/sources             controllers.Sources.index

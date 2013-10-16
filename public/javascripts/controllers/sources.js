@@ -1,10 +1,12 @@
 App.SourcesRoute = Ember.Route.extend({
+   authRedirectable: true,
    model: function() {
         return this.store.find("source");
    }
 });
 
 App.SourcesNewRoute = Ember.Route.extend({
+    authRedirectable: true,
     actions: {
         create: function() {
             var self = this;
@@ -17,6 +19,7 @@ App.SourcesNewRoute = Ember.Route.extend({
 });
 
 App.SourceEditRoute = Ember.Route.extend({
+    authRedirectable: true,
     setupController: function(controller) {
         controller.setProperties((this.modelFor('source').getProperties(['name', 'url'])));
     },
@@ -33,6 +36,7 @@ App.SourceEditRoute = Ember.Route.extend({
 });
 
 App.SourceDeleteRoute = Ember.Route.extend({
+    authRedirectable: true,
     actions: {
         delete: function() {
             var self = this;

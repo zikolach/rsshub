@@ -1,3 +1,5 @@
+import org.openqa.selenium.firefox.FirefoxDriver
+import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
@@ -14,11 +16,16 @@ class IntegrationSpec extends Specification {
 
   "Application" should {
 
-    "work from within a browser" in new WithBrowser {
-
+    "work from within a browser" in new WithBrowser(webDriver = FIREFOX) {
       browser.goTo("http://localhost:" + port)
+      browser.pageSource must contain("RSS Hub")
+    }
 
-      browser.pageSource must contain("Your new application is ready.")
+    "have posts, tags, sources links" in new WithBrowser(webDriver = FIREFOX) {
+      browser.goTo("http://localhost:" + port)
+      browser.$("a").getTexts().get(1) must contain("Posts")
+      browser.$("a").getTexts().get(2) must contain("Tags")
+      browser.$("a").getTexts().get(3) must contain("Sources")
     }
   }
 }

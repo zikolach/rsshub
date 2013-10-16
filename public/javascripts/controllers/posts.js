@@ -1,23 +1,38 @@
+App.PostsRoute = Ember.Route.extend({
+    authRedirectable: true,
+     redirect: function() {
+        console.log(this);
+//         this.transitionTo("posts.search");
+     }
+ });
+
 App.PostsIndexRoute = Ember.Route.extend({
-//   model: function() {
-//        return this.store.findQuery("post");
-//   }
-    redirect: function() {
-        this.transitionTo("posts.search");
+    authRedirectable: true,
+//    redirect: function() {
+//        this.transitionTo("posts.search");
+//    }
+});
+
+App.PostsSearchRoute = Ember.Route.extend({
+    authRedirectable: true,
+    actions: {
+        search: function(criteria) {
+            var self = this;
+            this.store.findQuery("post", { search: criteria }).then(function(posts) {
+                self.controller.set('model', posts);
+            });
+        }
     }
+
 });
 
 App.PostsSearchController = Ember.ArrayController.extend({
     sortProperties: ['distance','title'],
-    sortAscending: true,
-    actions: {
-        search: function(criteria) {
-            this.set('model', this.store.findQuery("post", { search: criteria }));
-        }
-    }
+    sortAscending: true
 });
 
 App.PostsNewRoute = Ember.Route.extend({
+    authRedirectable: true,
     actions: {
         create: function() {
             var self = this;
@@ -30,6 +45,7 @@ App.PostsNewRoute = Ember.Route.extend({
 });
 
 App.PostEditRoute = Ember.Route.extend({
+    authRedirectable: true,
     setupController: function(controller) {
         controller.setProperties((this.modelFor('post').getProperties(['title', 'link', 'description', 'pubDate'])));
     },
@@ -46,6 +62,7 @@ App.PostEditRoute = Ember.Route.extend({
 });
 
 App.PostDeleteRoute = Ember.Route.extend({
+    authRedirectable: true,
     actions: {
         delete: function() {
             var self = this;
