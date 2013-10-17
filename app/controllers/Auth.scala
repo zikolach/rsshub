@@ -1,18 +1,23 @@
 package controllers
 
-import play.api.mvc.{AnyContent, Request, Action, Controller}
+import play.api.mvc._
 import models.{User, Token}
 import play.api.libs.json.Json
+import scala.Some
 
 trait Auth {
-  def checkToken(req: Request[AnyContent]): Boolean = {
-    req.headers.get("token") match {
+  def checkToken(headers: Headers): Boolean = {
+    headers.get("token") match {
       case Some(token) => User.getByToken(token) match {
         case Some(user) => true
         case None => false
       }
       case None => false
     }
+  }
+  def getAuthor(headers: Headers): Option[User] = headers.get("token") match {
+    case Some(token) => User.getByToken(token)
+    case None => None
   }
 }
 

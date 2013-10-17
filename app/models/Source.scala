@@ -11,7 +11,7 @@ import java.util.Date
 import java.text.SimpleDateFormat
 import org.jsoup.Jsoup
 
-case class Source(id: Option[Long], name: String, url: String, fetchDate: Option[Date]) {
+case class Source(id: Option[Long], userId: Option[Long], name: String, url: String, fetchDate: Option[Date]) {
   def fetch(): Unit = {
     FeedReader.readEntries(url).foreach((entry) => {
       val title = entry._1
@@ -47,7 +47,7 @@ case class Source(id: Option[Long], name: String, url: String, fetchDate: Option
 
 object Source {
 
-  val source = long("id") ~ str("name") ~ str("url") ~ SqlParser.get[Option[Date]]("fetch_date") map { case id~name~url~fd => Source(Some(id), name, url, fd)}
+  val source = long("id") ~ long("user_id") ~ str("name") ~ str("url") ~ SqlParser.get[Option[Date]]("fetch_date") map { case id~userId~name~url~fd => Source(Some(id), Some(userId), name, url, fd)}
 
   def normalizeString(s: String): String = Jsoup.parse(s).body().text().replaceAll("[^\\p{L}\\p{Nd}\\s]", "").replaceAll("\\s+", " ")
 
@@ -56,28 +56,32 @@ object Source {
       SQL("select * from sources").as(source *)
   }
 
-  def get(id: Long): Source = DB.withConnection {
-    implicit c => SQL("select * from sources where id = {id}").on(
-      'id -> id
-    ).as(source single)
+  def findByUserId(userId: Long): List[Source] = DB.withConnection {
+    implicit c =>
+      SQL("select * from sources where user_id = {user_id}").on(
+        'user_id -> userId
+      ).as(source *)
   }
 
-  def create(name: String, url: String): Long = DB.withConnection {
+  def get(id: Long): Option[Source] = DB.withConnection {
+    implicit c => SQL("select * from sources where id = {id}").on(
+      'id -> id
+    ).as(source singleOpt)
+  }
+
+  def create(userId: Long, name: String, url: String): Long = DB.withConnection {
     implicit c => {
       val id: Option[Long] =
-        SQL("insert into sources(name, url) values ({name}, {url})").on(
-          'name -> name,
-          'url -> url
+        SQL("insert into sources(user_id, name, url) values ({user_id}, {name}, {url})").on(
+          'user_id -> userId, 'name -> name, 'url -> url
         ).executeInsert()
       id.get
     }
   }
 
-  def update(id: Long, name: String, url: String) = DB.withConnection {
-    implicit c => SQL("update sources set name = {name}, url = {url} where id = {id}").on(
-      'id -> id,
-      'name -> name,
-      'url -> url
+  def update(id: Long, userId: Long, name: String, url: String) = DB.withConnection {
+    implicit c => SQL("update sources set iser_id = {user_id}, name = {name}, url = {url} where id = {id}").on(
+      'id -> id, 'user_id -> userId, 'name -> name, 'url -> url
     ).executeUpdate()
   }
 

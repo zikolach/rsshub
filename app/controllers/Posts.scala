@@ -16,7 +16,7 @@ object Posts extends Controller with Auth {
 
   def index = Action {
     implicit request => {
-      if (!checkToken(request)) Unauthorized(Json.toJson(PostsWrapper(Nil, Nil)))
+      if (!checkToken(request.headers)) Unauthorized(Json.toJson(PostsWrapper(Nil, Nil)))
       else request.queryString.get("ids[]") match {
           case Some(ids) => {
             val posts = Post.get(ids.toList.map(_.toLong))

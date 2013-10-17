@@ -46,6 +46,10 @@ App.LogoutRoute = Ember.Route.extend({
             var self = this;
             var auth = this.get('auth');
             auth.signOut().then(function(res) {
+                self.store.unloadAll('source');
+                self.store.unloadAll('post');
+                self.store.unloadAll('tag');
+                self.store.unloadAll('user');
                 self.controllerFor('application').alert(res.message);
             }, function(err) {
                 self.controllerFor('application').alert(err.responseJSON.message);
