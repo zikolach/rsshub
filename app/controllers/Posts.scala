@@ -16,8 +16,8 @@ object Posts extends Controller with Auth {
 
   def index = Action {
     implicit request => {
-      if (!checkToken(request.headers)) Unauthorized(Json.toJson(PostsWrapper(Nil, Nil)))
-      else request.queryString.get("ids[]") match {
+      getAuthor(request.headers) match {
+        case Some(author) => request.queryString.get("ids[]") match {
           case Some(ids) => {
             val posts = Post.get(ids.toList.map(_.toLong))
             Ok(Json.toJson(PostsWrapper(posts, Tag.get(posts.map(_.tags.get).flatten))))
@@ -29,7 +29,7 @@ object Posts extends Controller with Auth {
                   case Some(bitmap) => {
                     val searchBitmap: Array[Int] = bitmap.positions
                     val posts = Post.all().map(
-                      post => Post(post.id, post.title, post.link, post.description, post.pubDate, None, Some(CeptAPI.compareSimilarity(post.fingerprint.get, searchBitmap).distance), post.tags)
+                      post => Post(post.id, None, post.sourceId, post.title, post.link, post.description, post.pubDate, None, Some(CeptAPI.compareSimilarity(post.fingerprint.get, searchBitmap).distance), post.tags)
                     ).filter(_.distance.get < 0.9).sortWith((a, b) => a.distance.get < b.distance.get)
                     val tagIds = posts.map(p => p.tags.get).flatten
                     Ok(Json.toJson(PostsWrapper(posts, Tag.get(tagIds))))
@@ -37,37 +37,58 @@ object Posts extends Controller with Auth {
                   case None => Ok(Json.toJson(PostsWrapper(Nil, Nil)))
                 }
               }
-              case None => Ok(Json.toJson(PostsWrapper(Nil, Nil)))
+              case None => request.getQueryString("owner") match {
+                case Some("me") => {
+                  val posts = Post.findByUserId(author.id.get)
+                  val tagIds = posts.map(p => p.tags.get).flatten
+                  Ok(Json.toJson(PostsWrapper(posts,  Tag.get(tagIds))))
+                }
+                case _ => Ok(Json.toJson(PostsWrapper(Nil, Nil)))
+              }
             }
         }
+        case _ => Ok(Json.toJson(PostsWrapper(Nil, Nil)))
+      }
     }
   }
 
   def get(id: Long) = Action {
-    val post = Post.get(id)
-    Ok(Json.toJson(new PostWrapper(Some(post), Some(Tag.get(post.tags.get)))))
+    Post.get(id) match {
+      case Some(post) => Ok(Json.toJson(new PostWrapper(Some(post), Some(Tag.get(post.tags.get)))))
+      case None => BadRequest("Post not found")
+    }
+
   }
 
   def create = Action(parse.json) {
     implicit request =>
-      request.body.validate[PostWrapper].map {
-        case PostWrapper(Some(Post(None, title, link, description, pubDate, None, None, None)), None) => {
-          val fp = CeptAPI.bitmap(title)
-          val id: Long = Post.create(title, link, description, pubDate, fp.get.positions)
-          Ok(Json.toJson(PostWrapper(Some(Post(Some(id), title, link, description, pubDate, None, None, None)), None)))
+      getAuthor(request.headers) match {
+        case Some(author) => {
+          request.body.validate[PostWrapper].map {
+            case PostWrapper(Some(Post(None, None, None, title, link, description, pubDate, _, _, _)), None) => {
+              val fp = CeptAPI.bitmap(title)
+              val id: Long = Post.create(author.id.get, None, title, link, description, pubDate, fp.get.positions)
+              if (id == 0) BadRequest("Cannot create post")
+              else Ok(Json.toJson(PostWrapper(Some(Post(Some(id), None, None, title, link, description, pubDate, None, None, None)), None)))
+            }
+          }.recoverTotal{
+            e => BadRequest(JsError.toFlatJson(e))
+          }
         }
-      }.recoverTotal{
-        e => BadRequest("Error: " + JsError.toFlatJson(e))
+        case None => Unauthorized(UR)
       }
+
   }
 
   def update(id: Long) = Action(parse.json) {
     implicit request =>
+      // TODO: check author
       request.body.validate[PostWrapper].map {
-        case PostWrapper(Some(Post(None, title, link, description, pubDate, None, None, None)), None) => {
-          val fp = CeptAPI.bitmap(title)
-          Post.update(id, title, link, description, pubDate, fp.get.positions)
-          Ok(Json.toJson(PostWrapper(Some(Post(Some(id), title, link, description, pubDate, None, None, None)), None)))
+        case PostWrapper(Some(Post(None, None, sourceId, title, link, description, pubDate, _, _, _)), None) => {
+          val fp = CeptAPI.bitmap(Source.normalizeString(title) + " " + Source.normalizeString(description))
+          // TODO: maybe check whether sourceId is the same
+          Post.update(id, sourceId, title, link, description, pubDate, fp.get.positions)
+          Ok(Json.toJson(PostWrapper(Some(Post(Some(id), None, sourceId, title, link, description, pubDate, None, None, None)), None)))
         }
       }.recoverTotal{
         e => BadRequest("Error: " + JsError.toFlatJson(e))

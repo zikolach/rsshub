@@ -6,6 +6,8 @@ import play.api.libs.json.Json
 import scala.Some
 
 trait Auth {
+  case class ResponseWrapper(status: Option[String])
+  val UR = "Not authorized request"
   def checkToken(headers: Headers): Boolean = {
     headers.get("token") match {
       case Some(token) => User.getByToken(token) match {

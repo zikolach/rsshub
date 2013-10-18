@@ -8,7 +8,7 @@ CREATE TABLE posts (
     title       varchar(1000),
     link        varchar(1000),
     description text,
-    pub_date    date,
+    pub_date    timestamp,
     fingerprint text,
     PRIMARY KEY (id),
     UNIQUE (link)

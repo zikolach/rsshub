@@ -129,8 +129,10 @@
     <script type="text/x-handlebars" data-template-name="posts">
         <ul class="nav nav-pills">
             {{#link-to "posts.search" tagName="li"}}<a href="#">Search&nbsp;<span class="glyphicon glyphicon-search"></span></a>{{/link-to}}
+            {{#link-to "posts.my" tagName="li"}}<a href="#">My posts&nbsp;<span class="glyphicon glyphicon-list"></span></a>{{/link-to}}
             {{#link-to "posts.new" tagName="li"}}<a href="#">Create&nbsp;<span class="glyphicon glyphicon-plus"></span></a>{{/link-to}}
         </ul>
+        <br>
         {{outlet}}
     </script>
 
@@ -149,6 +151,29 @@
                 <span class="badge pull-right">{{distance}}</span>
                 <h4 class="list-group-item-heading">
                     {{#link-to "post" id}}{{title}}{{/link-to}}
+                </h4>
+                <p class="list-group-item-text">
+                    {{#each tag in tags}}
+                    <small>{{#link-to "tag" tag}}#{{tag.name}}{{/link-to}}</small>
+                    {{/each}}
+                </p>
+            </div>
+            {{else}}
+            <div class="alert alert-warning">
+                No results
+            </div>
+            {{/each}}
+        </div>
+    </script>
+
+    <script type="text/x-handlebars" data-template-name="posts/my">
+        <br>
+        <div class="list-group">
+            {{#each controller}}
+            <div class="list-group-item">
+                <h4 class="list-group-item-heading">
+                    {{#link-to "post" id}}{{title}}{{/link-to}}
+                    <small>{{from-now pubDate}}</small>
                 </h4>
                 <p class="list-group-item-text">
                     {{#each tag in tags}}
@@ -192,15 +217,20 @@
     </script>
 
     <script type="text/x-handlebars" data-template-name="posts/new">
-        <form class="form-horizontal" role="form">
-            {{partial "post_edit"}}
-            <div class="form-group">
-                <div class="col-lg-offset-2 col-lg-10">
-                    <button type="submit" class="btn btn-primary" {{action "create"}}>Create&nbsp;<span class="glyphicon glyphicon-save"></span></button>
-                    {{#link-to "posts.search" tagName="button" class="btn btn-default"}}Cancel{{/link-to}}
-                </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">Create new post</div>
+            <div class="panel-body">
+                <form class="form-horizontal" role="form">
+                    {{partial "post_edit"}}
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" class="btn btn-primary" {{action "create"}}>Create&nbsp;<span class="glyphicon glyphicon-save"></span></button>
+                            {{#link-to "posts.search" tagName="button" class="btn btn-default"}}Cancel{{/link-to}}
+                        </div>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </script>
 
     <script type="text/x-handlebars" data-template-name="post">
@@ -221,9 +251,6 @@
         </div>
         <hr>
         {{outlet}}
-        <div class="row">
-        {{{description}}}
-        </div>
     </script>
 
     <script type="text/x-handlebars" data-template-name="post/edit">

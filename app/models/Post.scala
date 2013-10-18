@@ -5,11 +5,13 @@ import anorm.SqlParser._
 import anorm._
 import play.api.Play.current
 import java.util.Date
-import org.postgresql.util.PSQLException
 import play.api.Logger
+import java.sql.SQLException
 
 
 case class Post(id: Option[Long],
+                userId: Option[Long],
+                sourceId: Option[Long],
                 title: String,
                 link: String,
                 description: String,
@@ -24,49 +26,73 @@ object Post {
 
   def hex_to_arr(hex: String): Array[Int] = hex.sliding(4, 4).map(v => Integer.parseInt(v, 16)).toArray
 
-  val post = long("id") ~ str("title") ~ str("link") ~ str("description") ~ date("pub_date") ~ str("fingerprint") map { case id~title~link~description~pubDate~fingerprint => Post(Some(id), title, link, description, pubDate, Some(hex_to_arr(fingerprint)), None, None)}
+  val post = long("id") ~ long("user_id") ~ SqlParser.get[Option[Long]]("source_id") ~
+    str("title") ~ str("link") ~ str("description") ~ date("pub_date") ~ str("fingerprint") map {
+    case id~userId~sourceId~title~link~description~pubDate~fingerprint => Post(Some(id), Some(userId), sourceId, title, link, description, pubDate, Some(hex_to_arr(fingerprint)), None, None)
+  }
 
   def all(): List[Post] = DB.withConnection {
     implicit c => SQL("select * from posts").as(post *)
-  }.map(p => Post(p.id, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
+  }.map(p => Post(p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
 
-  def get(id: Long): Post = DB.withConnection {
+  def get(id: Long): Option[Post] = DB.withConnection {
     implicit c => SQL("select * from posts where id = {id}").on(
       'id -> id
-    ).as(post single)
+    ).as(post singleOpt)
   } match {
-    case p: Post => Post(p.id, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id)))
+    case Some(p) => Some(Post(p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
+    case None => None
   }
 
   def get(ids: List[Long]): List[Post] = DB.withConnection {
     implicit c => SQL("select * from posts where id in (%s)" format ids.mkString(",")).as(post *)
-  }.map(p => Post(p.id, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
+  }.map(p => Post(p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
 
-  def create(title: String, link: String, description: String, pubDate: Date,
+  def findByUserId(userId: Long): List[Post] = DB.withConnection {
+    implicit c => SQL("select * from posts where user_id = {user_id}").on('user_id -> userId).as(post *)
+  }.map(p => Post(p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
+
+  def create(userId: Long, sourceId: Option[Long], title: String, link: String, description: String, pubDate: Date,
              fingerprint: Array[Int]): Long = DB.withConnection {
     implicit c => try {
       val id: Option[Long] =
-        SQL("insert into posts(title, link, description, pub_date, fingerprint) values ({title}, {link}, {description}, {pub_date}, {fingerprint})").on(
-          'title -> title,
-          'link -> link,
-          'description -> description,
-          'pub_date -> pubDate,
-          'fingerprint -> arr_to_hex(fingerprint)
+        SQL("""
+              | insert into posts(user_id, source_id, title, link, description, pub_date, fingerprint)
+              | values ({user_id}, {source_id}, {title}, {link}, {description}, {pub_date}, {fingerprint})
+            """.stripMargin).on(
+          'user_id      -> userId,
+          'source_id    -> sourceId,
+          'title        -> title,
+          'link         -> link,
+          'description  -> description,
+          'pub_date     -> pubDate,
+          'fingerprint  -> arr_to_hex(fingerprint)
         ).executeInsert()
       id.get
     } catch {
-      case e: PSQLException => {
-        Logger.error("S" + e.getMessage)
+      case e: SQLException => {
+        Logger.error(e.getMessage)
         0
       }
     }
   }
 
-  def update(id: Long,
+  def update(id: Long, sourceId: Option[Long],
              title: String, link: String, description: String, pubDate: Date,
              fingerprint: Array[Int]) = DB.withConnection {
-    implicit c => SQL("update posts set name = {name}, text = {text}, fingerprint = {fingerprint} where id = {id}").on(
+    implicit c => SQL(
+      """
+        | update posts
+        | set source_id = {source_id},
+        |     title = {title},
+        |     link = {link},
+        |     description = {description},
+        |     pub_date = {pub_date},
+        |     fingerprint = {fingerprint}
+        | where id = {id}
+      """.stripMargin).on(
       'id -> id,
+      'source_id -> sourceId,
       'title -> title,
       'link -> link,
       'description -> description,

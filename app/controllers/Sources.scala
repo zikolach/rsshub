@@ -1,9 +1,8 @@
 package controllers
 
 import play.api.mvc.{Action, Controller}
-import models.{Token, Source}
+import models.Source
 import play.api.libs.json.{JsError, Json}
-import controllers.Posts.PostWrapper
 
 object Sources extends Controller with Auth {
 
@@ -24,8 +23,8 @@ object Sources extends Controller with Auth {
     implicit request => getAuthor(request.headers) match {
       case Some(author) => {
         Source.get(id) match {
-          case Some(Source(id, author.id, name, link, fd)) =>
-            Ok(Json.toJson(new SourceWrapper(Some(Source(id, None, name, link, fd)))))
+          case Some(Source(_, author.id, name, link, fd)) =>
+            Ok(Json.toJson(new SourceWrapper(Some(Source(Some(id), None, name, link, fd)))))
           case Some(_) => Unauthorized("Not authorized request")
           case None => BadRequest("Source does not exists")
         }

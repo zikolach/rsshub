@@ -31,15 +31,41 @@ App.PostsSearchController = Ember.ArrayController.extend({
     sortAscending: true
 });
 
+App.PostsMyRoute = Ember.Route.extend({
+    authRedirectable: true,
+    model: function(criteria) {
+        var self = this;
+        return this.store.findQuery("post", { owner: 'me' });
+    }
+
+});
+
+App.PostsMyController = Ember.ArrayController.extend({
+    sortProperties: ['title'],
+    sortAscending: true
+});
+
+
 App.PostsNewRoute = Ember.Route.extend({
     authRedirectable: true,
     actions: {
         create: function() {
             var self = this;
-            var post = this.store.createRecord('post', this.controller.getProperties(['title', 'link', 'description', 'pubDate']));
-            post.save().then(function(post) {
-                self.transitionTo('post', post);
-            });
+            var params = this.controller.getProperties(['title', 'link', 'description']);
+            var pubDate = moment(this.controller.get('pubDate'));
+            if (!pubDate.isValid())
+                this.controllerFor('application').alert('Invalid date');
+            else if (!params['title'] || !params['link'] || !params['description'])
+                this.controllerFor('application').alert('Empty fields');
+            else {
+                var post = this.store.createRecord('post', params);
+                post.set('pubDate', moment(pubDate).unix()*1000 + moment(pubDate).milliseconds());
+                post.save().then(function(post) {
+                    self.transitionTo('post', post);
+                }, function(err) {
+                    console.log(err);
+                });
+            }
         }
     }
 });
@@ -47,16 +73,25 @@ App.PostsNewRoute = Ember.Route.extend({
 App.PostEditRoute = Ember.Route.extend({
     authRedirectable: true,
     setupController: function(controller) {
-        controller.setProperties((this.modelFor('post').getProperties(['title', 'link', 'description', 'pubDate'])));
+        var post = this.modelFor('post')
+        controller.setProperties(post.getProperties(['title', 'link', 'description']));
+        controller.set('pubDate', moment(post.get('pubDate')).format('YYYY.MM.DD hh:mm:ss'));
     },
     actions: {
         update: function() {
             var self = this;
-            post = this.modelFor('post')
-            post.setProperties(this.controller.getProperties(['title', 'link', 'description', 'pubDate']));
-            post.save().then(function(post) {
-                self.transitionTo('post', post);
-            });
+            var pubDate = moment(this.controller.get('pubDate'));
+            if (!pubDate.isValid())
+                this.controllerFor('application').alert('Invalid date');
+            else {
+                post = this.modelFor('post')
+                post.setProperties(this.controller.getProperties(['title', 'link', 'description']));
+                post.set('pubDate', moment(pubDate).unix()*1000 + moment(pubDate).milliseconds());
+                post.save().then(function(post) {
+                    self.transitionTo('post', post);
+                });
+            }
+
         }
     }
 });

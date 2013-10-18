@@ -24,9 +24,9 @@ case class Source(id: Option[Long], userId: Option[Long], name: String, url: Str
           println(title)
           val text = "%s %s".format(Source.normalizeString(title), Source.normalizeString(description))
           val fp = CeptAPI.bitmap(text)
-          val id = Post.create(title, link, description, pubDate, fp.get.positions)
+          val postId = Post.create(userId.get, id, title, link, description, pubDate, fp.get.positions)
           val sims = CeptAPI.findSimilar(text, 10, 0, 0, 1, "N", 0.95).get
-          sims.foreach(sim => Post.addTag(id, sim.term))
+          sims.foreach(sim => Post.addTag(postId, sim.term))
         }
       }
     })
