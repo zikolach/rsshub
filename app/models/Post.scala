@@ -18,7 +18,8 @@ case class Post(id: Option[Long],
                 pubDate: Date,
                 fingerprint: Option[Array[Int]],
                 distance: Option[Double],
-                tags: Option[List[Long]])
+                tags: Option[List[Long]],
+                comments: Option[List[Long]])
 
 object Post {
 
@@ -28,29 +29,52 @@ object Post {
 
   val post = long("id") ~ long("user_id") ~ SqlParser.get[Option[Long]]("source_id") ~
     str("title") ~ str("link") ~ str("description") ~ date("pub_date") ~ str("fingerprint") map {
-    case id~userId~sourceId~title~link~description~pubDate~fingerprint => Post(Some(id), Some(userId), sourceId, title, link, description, pubDate, Some(hex_to_arr(fingerprint)), None, None)
+    case id~userId~sourceId~title~link~description~pubDate~fingerprint => Post(Some(id), Some(userId), sourceId, title, link, description, pubDate, Some(hex_to_arr(fingerprint)), None, None, None)
   }
 
   def all(): List[Post] = DB.withConnection {
     implicit c => SQL("select * from posts").as(post *)
-  }.map(p => Post(p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
+  }.map(
+    p => Post(
+      p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance,
+      Some(Tag.find(p.id.get).map(_.id)),
+      Some(Comment.find(p.id.get).map(_.id.get))
+    ))
 
   def get(id: Long): Option[Post] = DB.withConnection {
     implicit c => SQL("select * from posts where id = {id}").on(
       'id -> id
     ).as(post singleOpt)
   } match {
-    case Some(p) => Some(Post(p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
+    case Some(p) =>
+      Some(Post(
+        p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance,
+        Some(Tag.find(p.id.get).map(_.id)),
+        Some(Comment.find(p.id.get).map(_.id.get))
+      ))
     case None => None
   }
 
+
   def get(ids: List[Long]): List[Post] = DB.withConnection {
     implicit c => SQL("select * from posts where id in (%s)" format ids.mkString(",")).as(post *)
-  }.map(p => Post(p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
+  }.map(p =>
+    Post(
+      p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance,
+      Some(Tag.find(p.id.get).map(_.id)),
+      Some(Comment.find(p.id.get).map(_.id.get))
+    ))
 
   def findByUserId(userId: Long): List[Post] = DB.withConnection {
     implicit c => SQL("select * from posts where user_id = {user_id}").on('user_id -> userId).as(post *)
-  }.map(p => Post(p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance, Some(Tag.find(p.id.get).map(_.id))))
+  }.map(
+    p =>
+      Post(
+        p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance,
+        Some(Tag.find(p.id.get).map(_.id)),
+        Some(Comment.find(p.id.get).map(_.id.get))
+      )
+  )
 
   def create(userId: Long, sourceId: Option[Long], title: String, link: String, description: String, pubDate: Date,
              fingerprint: Array[Int]): Long = DB.withConnection {
@@ -136,4 +160,15 @@ object Post {
       'link -> link
     ).as(post singleOpt)
   }
+
+  def findBySourceId(sourceId: Long): List[Post] = DB.withConnection {
+    implicit c => SQL("select * from posts where source_id = {source_id}").on('source_id -> sourceId).as(post *)
+  }.map(
+    p =>
+      Post(
+        p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance,
+        None,
+        Some(Comment.find(p.id.get).map(_.id.get))
+      )
+  )
 }

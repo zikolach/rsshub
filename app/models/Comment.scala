@@ -6,11 +6,30 @@ import anorm._
 import SqlParser._
 import play.api.Play.current
 
-case class Comment(id: Long, postId: Long, updateDate: Date, comment: String)
+case class Comment(id: Option[Long], post: String, updateDate: Option[Date], comment: String)
 
 object Comment {
 
-  val comment = long("id") ~ long("post_id") ~ date("update_date") ~ str("comment") map { case id~postId~updateDate~comment => Comment(id, postId, updateDate, comment) }
+
+  val comment = long("id") ~ long("post_id") ~long("user_id") ~ date("update_date") ~ str("comment") map { case id~post~_~updateDate~comment => Comment(Some(id), post.toString, Some(updateDate), comment) }
+
+  def find(postId: Long): List[Comment] = DB.withConnection {
+    implicit c => SQL("select * from comments where post_id = {post_id}").on(
+      'post_id -> postId
+    ).as(comment *)
+  }
+
+  def get(ids: List[Long]): List[Comment] = DB.withConnection {
+    implicit c => {
+      SQL("select * from comments where id in (%s)" format ids.mkString(",")).as(comment *)
+    }
+  }
+//    .map(
+//    c => {
+//      println(c.id)
+//      c
+//    }
+//  )
 
   def findByPostId(postId: Long): List[Comment] = DB.withConnection {
     implicit c => SQL("select * from comments where post_id = {post_id}").on(
@@ -18,10 +37,12 @@ object Comment {
     ).as(comment *)
   }
 
-  def create(postId: Long, comment: String): Option[Long] = DB.withConnection {
-    implicit  c => SQL("insert into comments(post_id, update_date, comment) values ({post_id}, {update_date}, {comment})").on(
-      'post_id -> postId,
-      'update_date -> new Date(),
+
+  def create(userId: Long, post: String, comment: String, updateDate: Date): Option[Long] = DB.withConnection {
+    implicit  c => SQL("insert into comments(user_id, post_id, update_date, comment) values ({user_id}, {post_id}, {update_date}, {comment})").on(
+      'user_id -> userId,
+      'post_id ->  post.toLong,
+      'update_date -> updateDate,
       'comment -> comment
     ).executeInsert()
   }

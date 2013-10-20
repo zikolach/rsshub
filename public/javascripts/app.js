@@ -10,7 +10,12 @@ App.Router.map(function() {
         this.resource('post', { path: ':post_id' }, function() {
             this.route('edit');
             this.route('delete');
+            this.resource('comments', function() {
+                this.route('new');
+                this.route('comment', { path: ':comment_id' });
+            });
         });
+
     });
     this.resource('sources', function() {
         this.route('new');

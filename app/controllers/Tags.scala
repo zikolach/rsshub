@@ -18,7 +18,7 @@ object Tags extends Controller {
     request =>
       request.queryString.get("ids[]") match {
         case Some(ids) => {
-          val tags = Tag.get(ids.toList.map(_.toLong))
+          val tags = Tag.get(ids.toList.map(_.toString.toLong))
           val postIds = tags.map(_.posts.get).flatten
           Ok(Json.toJson(new TagsWrapper(tags, Post.get(postIds))))
         }

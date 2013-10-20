@@ -14,7 +14,7 @@ CREATE TABLE users (
 CREATE TABLE tokens (
     token varchar(255),
     user_id integer,
-    ip varchar(15),
+    ip varchar(255),
     PRIMARY KEY (token),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );

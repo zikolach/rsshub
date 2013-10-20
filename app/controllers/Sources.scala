@@ -3,6 +3,7 @@ package controllers
 import play.api.mvc.{Action, Controller}
 import models.Source
 import play.api.libs.json.{JsError, Json}
+import util.FeedReader
 
 object Sources extends Controller with Auth {
 
@@ -81,6 +82,14 @@ object Sources extends Controller with Auth {
   def delete(id: Long) = Action {
     Source.delete(id)
     Ok(Json.toJson(SourceWrapper(None)))
+  }
+
+
+  def getCommentsFeed(id: Long) = Action {
+    implicit request => {
+      val addr = "http://" + request.host;
+      Ok(FeedReader.makeCommentsFeed(id, addr)).as(XML)
+    }
   }
 
 }
