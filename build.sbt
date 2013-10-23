@@ -8,6 +8,8 @@ libraryDependencies ++= Seq(
   cache
 )
 
+libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.4"
+
 libraryDependencies +=
   "net.databinder.dispatch" %% "dispatch-core" % "0.11.0"
 

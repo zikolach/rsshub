@@ -10,6 +10,7 @@ import util.{CeptAPI, FeedReader}
 import java.util.Date
 import java.text.SimpleDateFormat
 import org.jsoup.Jsoup
+import play.api.Logger
 
 case class Source(id: Option[Long], userId: Option[Long], name: String, url: String, fetchDate: Option[Date]) {
   def fetch(): Unit = {
@@ -28,11 +29,15 @@ case class Source(id: Option[Long], userId: Option[Long], name: String, url: Str
           val text = "%s %s".format(Source.normalizeString(title), Source.normalizeString(description))
           CeptAPI.bitmap(text) match {
             case Some(fp) => {
-              val postId = Post.create(userId.get, id, title, link, description, pubDate, fp.positions)
-              val sims = CeptAPI.findSimilar(text, 10, 0, 0, 1, "N", 0.95).get
-              sims.foreach(sim => Post.addTag(postId, sim.term))
+              Post.create(userId.get, id, title, link, description, Option(pubDate), fp.positions).fold(
+                e => Logger.error(e),
+                post => {
+                  val sims = CeptAPI.findSimilar(text, 10, 0, 0, 1, "N", 0.95).get
+                  sims.foreach(sim => Post.addTag(post.id.get, sim.term))
+                }
+              )
             }
-            case None => Post.create(userId.get, id, title, link, description, pubDate, Array())
+            case None => Post.create(userId.get, id, title, link, description, Option(pubDate), Array())
           }
         }
       }

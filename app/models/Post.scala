@@ -2,11 +2,11 @@ package models
 
 import play.api.db.DB
 import anorm.SqlParser._
-import anorm._
+import anorm.{SqlParser, SQL, ~}
 import play.api.Play.current
 import java.util.Date
-import play.api.Logger
 import java.sql.SQLException
+import scalaz.{Success, Failure, Validation}
 
 
 case class Post(id: Option[Long],
@@ -32,55 +32,64 @@ object Post {
     case id~userId~sourceId~title~link~description~pubDate~fingerprint => Post(Some(id), Some(userId), sourceId, title, link, description, pubDate, Some(hex_to_arr(fingerprint)), None, None, None)
   }
 
-  def all(): List[Post] = DB.withConnection {
+  /**
+   * Get all posts
+   * @return
+   */
+  def all: List[Post] = DB.withConnection {
     implicit c => SQL("select * from posts").as(post *)
-  }.map(
-    p => Post(
-      p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance,
-      Some(Tag.find(p.id.get).map(_.id)),
-      Some(Comment.find(p.id.get).map(_.id.get))
-    ))
+  }.map(p => p.copy(tags = Some(Tag.find(p.id.get).map(_.id)), comments = Some(Comment.find(p.id.get).map(_.id.get))))
 
-  def get(id: Long): Option[Post] = DB.withConnection {
-    implicit c => SQL("select * from posts where id = {id}").on(
-      'id -> id
-    ).as(post singleOpt)
+
+  /**
+   * Get post
+   * @param id post identifier
+   * @return
+   */
+  def get(id: Long): Validation[String, Post] = DB.withConnection {
+    implicit c => SQL("select * from posts where id = {id}").on('id -> id).as(post singleOpt)
   } match {
-    case Some(p) =>
-      Some(Post(
-        p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance,
-        Some(Tag.find(p.id.get).map(_.id)),
-        Some(Comment.find(p.id.get).map(_.id.get))
-      ))
-    case None => None
+    case Some(p) => Success(p.copy(tags = Some(Tag.find(p.id.get).map(_.id)), comments = Some(Comment.find(p.id.get).map(_.id.get))))
+    case None => Failure("Post not found")
   }
 
 
+  /**
+   * Find posts
+   * @param ids list of post identifiers
+   * @return
+   */
   def get(ids: List[Long]): List[Post] = DB.withConnection {
     implicit c => SQL("select * from posts where id in (%s)" format ids.mkString(",")).as(post *)
-  }.map(p =>
-    Post(
-      p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance,
-      Some(Tag.find(p.id.get).map(_.id)),
-      Some(Comment.find(p.id.get).map(_.id.get))
-    ))
+  }.map(p => p.copy(tags = Some(Tag.find(p.id.get).map(_.id)), comments = Some(Comment.find(p.id.get).map(_.id.get))))
 
+
+  /**
+   * Find all user posts
+   * @param userId user identifier
+   * @return
+   */
   def findByUserId(userId: Long): List[Post] = DB.withConnection {
     implicit c => SQL("select * from posts where user_id = {user_id}").on('user_id -> userId).as(post *)
-  }.map(
-    p =>
-      Post(
-        p.id, p.userId, p.sourceId, p.title, p.link, p.description, p.pubDate, p.fingerprint, p.distance,
-        Some(Tag.find(p.id.get).map(_.id)),
-        Some(Comment.find(p.id.get).map(_.id.get))
-      )
-  )
+  }.map(p => p.copy(tags = Some(Tag.find(p.id.get).map(_.id)), comments = Some(Comment.find(p.id.get).map(_.id.get))))
 
-  def create(userId: Long, sourceId: Option[Long], title: String, link: String, description: String, pubDate: Date,
-             fingerprint: Array[Int]): Long = DB.withConnection {
-    require(pubDate != null)
-    require(userId != null)
-    require(sourceId != null)
+
+  /**
+   * Create new post
+   * @param userId author/owner
+   * @param sourceId source feed or empty for manually created posts
+   * @param title post title
+   * @param link link to the origin
+   * @param description post description
+   * @param pubDate publication date
+   * @param fingerprint semantic (bitmap) representation
+   * @return
+   */
+  def create(userId: Long, sourceId: Option[Long],
+             title: String, link: String, description: String,
+             pubDate: Option[Date], fingerprint: Array[Int]): Validation[String, Post] = DB.withConnection {
+    require(pubDate.isDefined)
+    require(sourceId.isDefined)
     implicit c => try {
       SQL("""
             | insert into posts(user_id, source_id, title, link, description, pub_date, fingerprint)
@@ -94,39 +103,41 @@ object Post {
         'pub_date     -> pubDate,
         'fingerprint  -> arr_to_hex(fingerprint)
       ).executeInsert() match {
-        case Some(id: Long) => id
-        case None => 0
+        case Some(id: Long) => Success(Post(Some(id), Some(userId), sourceId, title, link, description, pubDate.get, Some(fingerprint), None, None, None))
+        case None => Failure("Fail")
       }
     } catch {
-      case e: SQLException => {
-        Logger.error(e.getMessage)
-        0
-      }
+      case e: SQLException => Failure(e.getMessage)
     }
   }
 
-  def update(id: Long, sourceId: Option[Long],
+  def update(id: Long, sourceId: Option[Long], userId: Long,
              title: String, link: String, description: String, pubDate: Date,
-             fingerprint: Array[Int]) = DB.withConnection {
-    implicit c => SQL(
-      """
-        | update posts
-        | set source_id = {source_id},
-        |     title = {title},
-        |     link = {link},
-        |     description = {description},
-        |     pub_date = {pub_date},
-        |     fingerprint = {fingerprint}
-        | where id = {id}
-      """.stripMargin).on(
-      'id -> id,
-      'source_id -> sourceId,
-      'title -> title,
-      'link -> link,
-      'description -> description,
-      'pub_date -> pubDate,
-      'fingerprint -> arr_to_hex(fingerprint)
-    ).executeUpdate()
+             fingerprint: Array[Int]): Validation[String, Post] = DB.withConnection {
+    implicit c => try {
+      SQL(
+        """
+          | update posts
+          | set source_id = {source_id},
+          |     title = {title},
+          |     link = {link},
+          |     description = {description},
+          |     pub_date = {pub_date},
+          |     fingerprint = {fingerprint}
+          | where id = {id}
+        """.stripMargin).on(
+        'id -> id,
+        'source_id -> sourceId,
+        'title -> title,
+        'link -> link,
+        'description -> description,
+        'pub_date -> pubDate,
+        'fingerprint -> arr_to_hex(fingerprint)
+      ).executeUpdate()
+      Success(Post(Some(id), Some(userId), sourceId, title, link, description, pubDate, Some(fingerprint), None, None, None))
+    } catch {
+      case e: SQLException => Failure(e.getMessage)
+    }
   }
 
   def delete(id: Long) = DB.withConnection {
@@ -144,7 +155,7 @@ object Post {
     implicit c => SQL("insert into post_tags(post_id, tag_id) values({post_id}, {tag_id})").on(
       'post_id -> postId,
       'tag_id -> tag.id
-    ).executeInsert()
+    ).executeUpdate()
   }
 
   def findPosts(tagId: Long): List[Post] = DB.withConnection {
