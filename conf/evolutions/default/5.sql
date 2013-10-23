@@ -13,17 +13,12 @@ CREATE TABLE comments (
     FOREIGN KEY (post_id) REFERENCES posts(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
-ALTER TABLE posts ADD (
-    user_id integer NOT NULL,
-    source_id integer
-);
+ALTER TABLE posts ADD COLUMN user_id integer;
+ALTER TABLE posts ADD COLUMN source_id integer;
 ALTER TABLE posts ADD FOREIGN KEY (user_id) REFERENCES users(id);
 ALTER TABLE posts ADD FOREIGN KEY (source_id) REFERENCES sources(id);
-ALTER TABLE sources ADD (
-    user_id integer
-);
+ALTER TABLE sources ADD COLUMN user_id integer;
 ALTER TABLE sources ADD FOREIGN KEY (user_id) REFERENCES users(id);
-
 
 
 # --- !Downs
