@@ -94,10 +94,8 @@ object Post {
         'pub_date     -> pubDate,
         'fingerprint  -> arr_to_hex(fingerprint)
       ).executeInsert() match {
-        case Some(id) => id
-        case None => {
-          0
-        }
+        case Some(id: Long) => id
+        case None => 0
       }
     } catch {
       case e: SQLException => {

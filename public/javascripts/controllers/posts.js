@@ -92,6 +92,11 @@ App.PostEditRoute = Ember.Route.extend({
                 });
             }
 
+        },
+        cancel: function() {
+            var self = this;
+            post = this.modelFor('post');
+            self.transitionTo('post', post);
         }
     }
 });
@@ -101,11 +106,16 @@ App.PostDeleteRoute = Ember.Route.extend({
     actions: {
         delete: function() {
             var self = this;
-            post = this.modelFor('post');
-            post.deleteRecord();
-            post.save().then(function() {
-                self.transitionTo('posts');
-            });
+            var post = this.modelFor('post');
+            var userId = this.auth.get('userId');
+            if (userId === post.get('userId')) {
+                post.deleteRecord();
+                post.save().then(function() {
+                    self.transitionTo('posts');
+                });
+            } else {
+                self.controllerFor('application').alert('You can not delete this post');
+            }
         },
         cancel: function() {
             var self = this;

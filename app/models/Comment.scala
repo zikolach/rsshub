@@ -6,12 +6,17 @@ import anorm._
 import SqlParser._
 import play.api.Play.current
 
-case class Comment(id: Option[Long], post: String, updateDate: Option[Date], comment: String)
+case class Comment(id: Option[Long],
+                   post: String,
+                   updateDate: Option[Date],
+                   comment: String,
+                   userId: Option[Long],
+                   userName: Option[String])
 
 object Comment {
 
 
-  val comment = long("id") ~ long("post_id") ~long("user_id") ~ date("update_date") ~ str("comment") map { case id~post~_~updateDate~comment => Comment(Some(id), post.toString, Some(updateDate), comment) }
+  val comment = long("id") ~ long("post_id") ~long("user_id") ~ date("update_date") ~ str("comment") map { case id~post~userId~updateDate~comment => Comment(Some(id), post.toString, Some(updateDate), comment, Some(userId), None) }
 
   def find(postId: Long): List[Comment] = DB.withConnection {
     implicit c => SQL("select * from comments where post_id = {post_id}").on(
@@ -23,13 +28,14 @@ object Comment {
     implicit c => {
       SQL("select * from comments where id in (%s)" format ids.mkString(",")).as(comment *)
     }
-  }
-//    .map(
-//    c => {
-//      println(c.id)
-//      c
-//    }
-//  )
+  }.map(
+    c => c.copy(
+      userName = User.get(c.userId.get) match {
+        case Some(user) => Some(user.name)
+        case None => None
+      }
+    )
+  )
 
   def findByPostId(postId: Long): List[Comment] = DB.withConnection {
     implicit c => SQL("select * from comments where post_id = {post_id}").on(

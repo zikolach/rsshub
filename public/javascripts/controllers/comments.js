@@ -18,7 +18,7 @@ App.CommentsNewRoute = Ember.Route.extend({
             var comment = this.store.createRecord('comment', params);
             comment.save().then(function(comment) {
                 post.get('comments').pushObject(comment);
-                this.controller.set('comment', '');
+                self.controller.set('comment', '');
                 self.transitionTo('comments', post);
 
             }, function(err) {

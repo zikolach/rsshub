@@ -1,10 +1,9 @@
 package controllers
 
-import models.{Comment, Post, Tag}
+import models.Comment
 import play.api.libs.json.{JsError, Json}
 import play.api.mvc.{Action, Controller}
 import java.util.Date
-import scala.collection.mutable
 
 
 object Comments extends Controller with Auth {
@@ -20,7 +19,7 @@ object Comments extends Controller with Auth {
     implicit request => {
       request.queryString.get("ids[]") match {
         case Some(ids) => {
-          val comments = Comment.get(ids.toList.map(_.toString.toLong))
+          val comments = Comment.get(ids.toList.map(_.toString.toLong)).map(_.copy(userId = None))
           Ok(Json.toJson(CommentsWrapper(Some(comments))))
         }
         case _ =>
@@ -35,11 +34,11 @@ object Comments extends Controller with Auth {
       getAuthor(request.headers) match {
         case Some(user) => {
           request.body.validate[CommentWrapper].map {
-            case CommentWrapper(Some(Comment(_, post, _, comment))) => {
+            case CommentWrapper(Some(Comment(_, post, _, comment, _, _))) => {
               val updateDate = new Date()
               Comment.create(user.id.get, post, comment, updateDate) match {
                 case Some(id) => {
-                  Ok(Json.toJson(CommentWrapper(Some(Comment(Some(id), post, Some(updateDate), comment)))))
+                  Ok(Json.toJson(CommentWrapper(Some(Comment(Some(id), post, Some(updateDate), comment, None, Some(user.name))))))
                 }
                 case None =>
                   BadRequest(Json.toJson(CommentWrapper(None)))

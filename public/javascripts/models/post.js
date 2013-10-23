@@ -5,5 +5,6 @@ App.Post = DS.Model.extend({
     pubDate: DS.attr('isoDate'),
     distance: DS.attr('number'),
     tags: DS.hasMany('tag', { async: true }),
-    comments: DS.hasMany('comment', { async: true })
+    comments: DS.hasMany('comment', { async: true }),
+    userId: DS.attr('number')
 })
