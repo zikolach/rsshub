@@ -79,6 +79,8 @@ object Post {
   def create(userId: Long, sourceId: Option[Long], title: String, link: String, description: String, pubDate: Date,
              fingerprint: Array[Int]): Long = DB.withConnection {
     require(pubDate != null)
+    require(userId != null)
+    require(sourceId != null)
     implicit c => try {
       SQL("""
             | insert into posts(user_id, source_id, title, link, description, pub_date, fingerprint)

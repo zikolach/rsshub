@@ -16,12 +16,12 @@ object Token {
 
   def create(userId: Long, ip: String): Token = DB.withConnection {
     implicit c => {
-      val token = java.util.UUID.randomUUID.toString
+      val token: String = java.util.UUID.randomUUID.toString
       SQL("insert into tokens(token, user_id, ip) values({token}, {user_id}, {ip})").on(
         'token -> token,
         'user_id -> userId,
         'ip -> ip
-      ).executeInsert()
+      ).executeUpdate()
       Token(token, userId, ip)
     }
   }
