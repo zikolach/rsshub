@@ -17,7 +17,7 @@ object FeedReader {
     val input = new SyndFeedInput()
     val feed = input.build(new XmlReader(conn))
     feed.getEntries.toList.map {
-      case e: SyndEntry => (e.getTitle, e.getLink, e.getDescription.getValue, e.getPublishedDate)
+      case e: SyndEntry => (e.getTitle, e.getLink, e.getDescription.getValue, Option(e.getPublishedDate).getOrElse(e.getUpdatedDate))
     }
   }
 
