@@ -78,21 +78,25 @@ object Post {
 
   def create(userId: Long, sourceId: Option[Long], title: String, link: String, description: String, pubDate: Date,
              fingerprint: Array[Int]): Long = DB.withConnection {
+    require(pubDate != null)
     implicit c => try {
-      val id: Option[Long] =
-        SQL("""
-              | insert into posts(user_id, source_id, title, link, description, pub_date, fingerprint)
-              | values ({user_id}, {source_id}, {title}, {link}, {description}, {pub_date}, {fingerprint})
-            """.stripMargin).on(
-          'user_id      -> userId,
-          'source_id    -> sourceId,
-          'title        -> title,
-          'link         -> link,
-          'description  -> description,
-          'pub_date     -> pubDate,
-          'fingerprint  -> arr_to_hex(fingerprint)
-        ).executeInsert()
-      id.get
+      SQL("""
+            | insert into posts(user_id, source_id, title, link, description, pub_date, fingerprint)
+            | values ({user_id}, {source_id}, {title}, {link}, {description}, {pub_date}, {fingerprint})
+          """.stripMargin).on(
+        'user_id      -> userId,
+        'source_id    -> sourceId,
+        'title        -> title,
+        'link         -> link,
+        'description  -> description,
+        'pub_date     -> pubDate,
+        'fingerprint  -> arr_to_hex(fingerprint)
+      ).executeInsert() match {
+        case Some(id) => id
+        case None => {
+          0
+        }
+      }
     } catch {
       case e: SQLException => {
         Logger.error(e.getMessage)

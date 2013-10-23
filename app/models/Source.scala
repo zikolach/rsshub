@@ -17,16 +17,23 @@ case class Source(id: Option[Long], userId: Option[Long], name: String, url: Str
       val title = entry._1
       val link = entry._2
       val description = entry._3
-      val pubDate = entry._4
+      val pubDate = entry._4 match {
+        case d: Date => d
+        case _ => new Date()
+      }
       Post.findPost(link) match {
         case Some(p: Post) => {}
         case None => {
           println(title)
           val text = "%s %s".format(Source.normalizeString(title), Source.normalizeString(description))
-          val fp = CeptAPI.bitmap(text)
-          val postId = Post.create(userId.get, id, title, link, description, pubDate, fp.get.positions)
-          val sims = CeptAPI.findSimilar(text, 10, 0, 0, 1, "N", 0.95).get
-          sims.foreach(sim => Post.addTag(postId, sim.term))
+          CeptAPI.bitmap(text) match {
+            case Some(fp) => {
+              val postId = Post.create(userId.get, id, title, link, description, pubDate, fp.positions)
+              val sims = CeptAPI.findSimilar(text, 10, 0, 0, 1, "N", 0.95).get
+              sims.foreach(sim => Post.addTag(postId, sim.term))
+            }
+            case None => Post.create(userId.get, id, title, link, description, pubDate, Array())
+          }
         }
       }
     })
