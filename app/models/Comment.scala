@@ -25,9 +25,9 @@ object Comment {
   }
 
   def get(ids: List[Long]): List[Comment] = DB.withConnection {
-    implicit c => {
-      SQL("select * from comments where id in (%s)" format ids.mkString(",")).as(comment *)
-    }
+    implicit c =>
+      if (ids.length > 0) SQL("select * from comments where id in (%s)" format ids.mkString(",")).as(comment *)
+      else Nil
   }.map(
     c => c.copy(
       userName = User.get(c.userId.get) match {
