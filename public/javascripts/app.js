@@ -38,8 +38,7 @@ App.Router.map(function() {
     this.route('logout');
 });
 
-App.ApplicationRoute = Ember.Route.extend({
-});
+App.ApplicationRoute = Ember.Route.extend({});
 
 App.ApplicationController = Ember.Controller.extend({
     alert: function(message) {

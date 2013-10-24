@@ -31,45 +31,43 @@ App.PostsSearchController = Ember.ArrayController.extend({
 App.PostsMyRoute = Ember.Route.extend({
     authRedirectable: true,
     model: function(criteria) {
-        var self = this;
-        return this.store.findQuery('post', {
-            owner: 'me',
-            start: 0,
-            count: 10,
-            sort: ['title']
-        });
+        return new Ember.makeArray();
     },
     setupController: function(controller, model) {
         controller.set('model', model);
-        controller.set('fetchable', model.get('length') > 0);
-    },
-    actions: {
-        fetchNext: function() {
-            var self = this;
-            var model = this.modelFor('posts.my')
-            var start = model.get('length');
-            var sort = this.controller.get('sortProperties');
-            console.log(sort);
-            this.store.findQuery('post', {
-                owner: 'me',
-                start: start,
-                count: 10,
-                sort: sort
-            }).then(function(posts) {
-                if (posts.get('length') > 0)
-                    model.addObjects(posts);
-                else {
-                    self.controller.set('fetchable', false);
-                }
-            });
-        }
+        controller.send('fetchNext');
     }
 });
 
 App.PostsMyController = Ember.ArrayController.extend({
     sortProperties: ['title'],
     sortAscending: true,
-    fetchable: true
+    fetchable: true,
+    loading: true,
+    actions: {
+        fetchNext: function() {
+            var self = this;
+            var model = this.get('model');
+            var start = model.get('length');
+            var sort = this.get('sortProperties');
+            self.set('loading', true);
+            this.store.findQuery('post', {
+                owner: 'me',
+                start: start,
+                count: 10,
+                sort: sort
+            }).then(function(posts) {
+                if (posts.get('length') > 0) {
+                    model.addObjects(posts);
+                    self.set('model', model);
+                    self.set('fetchable', true);
+                } else {
+                    self.set('fetchable', false);
+                }
+                self.set('loading', false);
+            });
+        }
+    }
 });
 
 

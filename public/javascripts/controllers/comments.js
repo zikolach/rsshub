@@ -13,7 +13,7 @@ App.CommentsNewRoute = Ember.Route.extend({
             var params = this.controller.getProperties(['comment']);
             var post = this.modelFor('post');
             params['post'] = post;
-            console.log(params);
+//            console.log(params);
 //            debugger;
             var comment = this.store.createRecord('comment', params);
             comment.save().then(function(comment) {

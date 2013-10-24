@@ -32,12 +32,6 @@
                     {{#link-to "tags.show" tagName="li"}}<a href="#">Tags</a>{{/link-to}}
                     {{#link-to "sources" tagName="li"}}<a href="#">Sources</a>{{/link-to}}
                 </ul>
-                <!--<form class="navbar-form navbar-left" role="search">-->
-                    <!--<div class="form-group">-->
-                        <!--<input type="text" class="form-control" placeholder="Search">-->
-                    <!--</div>-->
-                    <!--<button type="submit" class="btn btn-default">Submit</button>-->
-                <!--</form>-->
                 <ul class="nav navbar-nav navbar-right">
                     {{#if auth.signedIn}}
                     <li class="dropdown">
@@ -186,13 +180,17 @@
             {{#each controller}}
                 {{partial "post_line"}}
             {{else}}
-            <div class="alert alert-warning">
-                No results
-            </div>
+                {{#unless loading}}
+                    <div class="alert alert-warning">
+                        No results
+                    </div>
+                {{/unless}}
             {{/each}}
             <div class="list-group-item">
                 {{#if fetchable}}
-                <button class="btn btn-default btn-block" {{action "fetchNext"}}>Next</button>
+                    <button class="btn btn-default btn-block" {{bindAttr disabled=loading}} {{action "fetchNext"}}>
+                        {{#if loading}}Loading...{{else}}Next{{/if}}
+                    </button>
                 {{else}}
                 <div class="alert alert-info">
                     All posts fetched
@@ -299,7 +297,7 @@
 
 
     <script type="text/x-handlebars" data-template-name="comments">
-        <div class="col-lg-offset-3 col-lg-6">
+        <div class="col-lg-offset-2 col-lg-8 col-md-offset-1 col-md-10">
             <ul class="nav nav-pills pull-right">
                 {{#link-to "comments.new" tagName="li"}}<a href="#">New comment&nbsp;<span class="glyphicon glyphicon-plus"></span></a>{{/link-to}}
             </ul>
@@ -325,9 +323,9 @@
         <div class="panel panel-default">
             <div class="panel-body">
                 <form class="form-inline" role="form">
-                    <div class="form-group col-lg-6">
+                    <div class="form-group col-lg-8 col-md-8 col-sm-8 col-8">
                         <label for="inputComment" class="sr-only">Comment</label>
-                        {{input id="inputComment" class="form-control" placeholder="Comment text..." value=comment}}
+                        {{textarea id="inputComment" rows="3" class="form-control" placeholder="Comment text..." value=comment}}
                     </div>
                     <button type="submit" class="btn btn-primary" {{action "create"}}>Create&nbsp;<span class="glyphicon glyphicon-save"></span></button>
                     <button class="btn btn-default" {{action "cancel"}}>Cancel</button>
