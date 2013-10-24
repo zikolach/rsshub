@@ -190,6 +190,16 @@
                 No results
             </div>
             {{/each}}
+            <div class="list-group-item">
+                {{#if fetchable}}
+                <button class="btn btn-default btn-block" {{action "fetchNext"}}>Next</button>
+                {{else}}
+                <div class="alert alert-info">
+                    All posts fetched
+                </div>
+                {{/if}}
+            </div>
+
         </div>
     </script>
 

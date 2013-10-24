@@ -1,16 +1,9 @@
 App.PostsRoute = Ember.Route.extend({
     authRedirectable: true,
-//     redirect: function() {
-//        console.log(this);
-//         this.transitionTo("posts.search");
-//     }
  });
 
 App.PostsIndexRoute = Ember.Route.extend({
     authRedirectable: true,
-//    redirect: function() {
-//        this.transitionTo("posts.search");
-//    }
 });
 
 App.PostsSearchRoute = Ember.Route.extend({
@@ -18,7 +11,11 @@ App.PostsSearchRoute = Ember.Route.extend({
     actions: {
         search: function(criteria) {
             var self = this;
-            this.store.findQuery("post", { search: criteria }).then(function(posts) {
+            this.store.findQuery('post', {
+                search: criteria,
+                start: 0,
+                count: 10
+            }).then(function(posts) {
                 self.controller.set('model', posts);
             });
         }
@@ -35,14 +32,44 @@ App.PostsMyRoute = Ember.Route.extend({
     authRedirectable: true,
     model: function(criteria) {
         var self = this;
-        return this.store.findQuery("post", { owner: 'me' });
+        return this.store.findQuery('post', {
+            owner: 'me',
+            start: 0,
+            count: 10,
+            sort: ['title']
+        });
+    },
+    setupController: function(controller, model) {
+        controller.set('model', model);
+        controller.set('fetchable', model.get('length') > 0);
+    },
+    actions: {
+        fetchNext: function() {
+            var self = this;
+            var model = this.modelFor('posts.my')
+            var start = model.get('length');
+            var sort = this.controller.get('sortProperties');
+            console.log(sort);
+            this.store.findQuery('post', {
+                owner: 'me',
+                start: start,
+                count: 10,
+                sort: sort
+            }).then(function(posts) {
+                if (posts.get('length') > 0)
+                    model.addObjects(posts);
+                else {
+                    self.controller.set('fetchable', false);
+                }
+            });
+        }
     }
-
 });
 
 App.PostsMyController = Ember.ArrayController.extend({
     sortProperties: ['title'],
-    sortAscending: true
+    sortAscending: true,
+    fetchable: true
 });
 
 

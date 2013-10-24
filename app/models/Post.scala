@@ -73,6 +73,13 @@ object Post {
     implicit c => SQL("select * from posts where user_id = {user_id}").on('user_id -> userId).as(post *)
   }.map(p => p.copy(tags = Some(Tag.find(p.id.get).map(_.id)), comments = Some(Comment.find(p.id.get).map(_.id.get))))
 
+  def findByUserIdOrderedWithLimit(userId: Long, start: Int, count: Int, orderBy: Seq[String]): List[Post] = DB.withConnection {
+    implicit c => SQL("select * from posts where user_id = {user_id} order by %s limit {count} offset {start}".format(orderBy.mkString(","))).on(
+      'user_id -> userId,
+      'start -> start,
+      'count -> count
+    ).as(post *)
+  }.map(p => p.copy(tags = Some(Tag.find(p.id.get).map(_.id)), comments = Some(Comment.find(p.id.get).map(_.id.get))))
 
   /**
    * Create new post
