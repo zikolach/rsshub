@@ -46,6 +46,7 @@ App.LogoutRoute = Ember.Route.extend({
             var self = this;
             var auth = this.get('auth');
             auth.signOut().then(function(res) {
+                self.store.unloadAll('feed');
                 self.store.unloadAll('source');
                 self.store.unloadAll('post');
                 self.store.unloadAll('tag');
