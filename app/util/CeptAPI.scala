@@ -1,7 +1,8 @@
 package util
 import dispatch._, Defaults._
-import play.api.libs.json.Json
+import play.api.libs.json.{JsError, Json}
 import play.api.Logger
+import scalaz.{Success, Validation, Failure}
 
 
 object CeptAPI {
@@ -89,16 +90,28 @@ object CeptAPI {
       .addQueryParameter("app_key", appKey)
 
   def findSimilar(term: String,
-                  similartermsLimit: Int, similartermsOffset: Int,
+                  similarTermsLimit: Int, similartermsOffset: Int,
                   minRelDf: Double, maxRelDf: Double,
-                  posFilter: String, posConfidence: Double): Option[List[SimilarTerm]] = {
-    val res = Http(similarSvc(term, similartermsLimit, similartermsOffset, minRelDf, maxRelDf, posFilter, posConfidence) OK as.String)
-    val json = res()
-    Json.parse(json).validate[SimilarResponse].map(
-      r => Some(r.similarterms)
-    ).recoverTotal(
-      e => None
-    )
+                  posFilter: String, posConfidence: Double): Validation[String, List[SimilarTerm]] = {
+    require(term.length <= 10000)
+    require(term.length > 0)
+    Logger.info("Get similar for: %s".format(term))
+    val svc = similarSvc(term.toLowerCase, similarTermsLimit, similartermsOffset, minRelDf, maxRelDf, posFilter, posConfidence)
+    val res = Http(svc OK as.String).either
+    val json = res.apply()
+    json match {
+      case Left(err) => {
+        Failure(err.getMessage)
+      }
+      case Right(str) => {
+        Json.parse(str).validate[SimilarResponse].map(
+          r => Success(r.similarterms)
+        ).recoverTotal(
+          e => Failure(e.toString)
+        )
+      }
+    }
+
   }
 
   def printBitmap(term: String) = {

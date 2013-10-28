@@ -11,6 +11,7 @@ POST    /api/v1/login               controllers.Auth.login
 DELETE  /api/v1/logout              controllers.Auth.logout
 
 GET     /comments/:id               controllers.Sources.getCommentsFeed(id: Long)
+GET     /feeds/:id                  controllers.Feeds.getAggFeed(id: Long)
 
 
 # Users
@@ -39,6 +40,13 @@ POST    /api/v1/comments            controllers.Comments.create
 # Tags
 GET     /api/v1/tags                controllers.Tags.index
 GET     /api/v1/tags/:id            controllers.Tags.get(id: Long)
+
+# Feeds
+GET     /api/v1/feeds               controllers.Feeds.index
+POST    /api/v1/feeds               controllers.Feeds.create
+PUT     /api/v1/feeds/:id           controllers.Feeds.update(id: Long)
+DELETE  /api/v1/feeds/:id           controllers.Feeds.delete(id: Long)
+
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

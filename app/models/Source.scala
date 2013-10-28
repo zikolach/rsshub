@@ -1,9 +1,10 @@
 package models
 
 import anorm.SqlParser._
-import anorm._
 import play.api.db.DB
 import anorm.~
+import anorm.SQL
+import anorm.SqlParser
 import scala.Some
 import play.api.Play.current
 import util.{CeptAPI, FeedReader}
@@ -11,6 +12,7 @@ import java.util.Date
 import java.text.SimpleDateFormat
 import org.jsoup.Jsoup
 import play.api.Logger
+import scalaz.{Failure, Success}
 
 case class Source(id: Option[Long], userId: Option[Long], name: String, url: String, fetchDate: Option[Date]) {
   def fetch(): Unit = {
@@ -32,8 +34,10 @@ case class Source(id: Option[Long], userId: Option[Long], name: String, url: Str
               Post.create(userId.get, id, title, link, description, Option(pubDate), fp.positions).fold(
                 e => Logger.error(e),
                 post => {
-                  val sims = CeptAPI.findSimilar(text, 10, 0, 0, 1, "N", 0.95).get
-                  sims.foreach(sim => Post.addTag(post.id.get, sim.term))
+                  CeptAPI.findSimilar(text, 10, 0, 0, 1, "N", 0.95) match {
+                    case Success(sims) => sims.foreach(sim => Post.addTag(post.id.get, sim.term))
+                    case Failure(err) => println(err)
+                  }
                 }
               )
             }
@@ -107,6 +111,16 @@ object Source {
     implicit c => {
       SQL("select * from sources order by fetch_date nulls first limit 1").as(source singleOpt)
     }
+  }
+
+  def getFeedSources(feedId: Long): List[Source] = DB.withConnection {
+    implicit c => SQL(
+      """
+        | select s.*
+        | from sources s
+        | inner join feed_sources fs on fs.source_id = s.id
+        | where fs.feed_id = {feed_id}
+      """.stripMargin).on('feed_id -> feedId).as(source *)
   }
 
 }

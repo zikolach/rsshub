@@ -148,9 +148,14 @@ object Post {
   }
 
   def delete(id: Long) = DB.withConnection {
-    implicit  c => SQL("delete posts where id = {id}").on(
-      'id -> id
-    ).executeUpdate()
+    implicit  c => {
+      SQL("delete from post_tags where post_id = {id}").on(
+        'id -> id
+      ).executeUpdate()
+      SQL("delete from posts where id = {id}").on(
+        'id -> id
+      ).executeUpdate()
+    }
   }
 
   def addTag(postId: Long, name: String): Unit = Tag.find(name) match {

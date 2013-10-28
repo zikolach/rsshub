@@ -87,8 +87,8 @@ object Sources extends Controller with Auth {
 
   def getCommentsFeed(id: Long) = Action {
     implicit request => {
-      val addr = "http://" + request.host;
-      Ok(FeedReader.makeCommentsFeed(id, addr)).as(XML)
+      val address = "http://" + request.host;
+      Ok(FeedReader.makeCommentsFeed(id, address)).as(XML)
     }
   }
 

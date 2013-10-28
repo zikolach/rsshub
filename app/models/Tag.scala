@@ -29,9 +29,13 @@ object Tag {
     case t: Tag => Tag(t.id, t.name, Some(Post.findPosts(id).map(_.id.get)))
   }
 
-  def get(ids: List[Long]): List[Tag] = DB.withConnection {
-    implicit c => SQL("select * from tags where id in (%s)" format ids.mkString(",")).as(tag *)
-  }.map(t => Tag(t.id, t.name, Some(Post.findPosts(t.id).map(p => p.id.get))))
+  def get(ids: List[Long]): List[Tag] = ids match {
+    case Nil => Nil
+    case _ => DB.withConnection {
+      implicit c => SQL("select * from tags where id in (%s)" format ids.mkString(",")).as(tag *)
+    }.map(t => Tag(t.id, t.name, Some(Post.findPosts(t.id).map(p => p.id.get))))
+  }
+
 
   def create(name: String): Long = DB.withConnection {
     implicit c => {

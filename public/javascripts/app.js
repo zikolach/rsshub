@@ -28,7 +28,13 @@ App.Router.map(function() {
         this.route('show');
         this.resource('tag', { path: ':tag_id'});
     });
-
+    this.resource('feeds', function() {
+        this.route('new');
+        this.resource('feed', { path: ':feed_id' }, function() {
+            this.route('edit');
+            this.route('delete');
+        });
+    });
     this.resource('profile', function() {
         this.route('show');
         this.route('edit');
