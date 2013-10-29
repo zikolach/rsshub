@@ -7,12 +7,20 @@ App.SourcesRoute = Ember.Route.extend({
 
 App.SourcesNewRoute = Ember.Route.extend({
     authRedirectable: true,
+    setupController: function(controller) {
+        controller.set('name', '');
+        controller.set('url', '');
+    },
     actions: {
         create: function() {
             var self = this;
             var source = this.store.createRecord('source', this.controller.getProperties(['name', 'url']));
             source.save().then(function(source) {
                 self.transitionTo('source', source);
+            }, function(err) {
+                console.log(err);
+                self.controllerFor('application').alert("Create source failed");
+                source.deleteRecord();
             });
         }
     }

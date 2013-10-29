@@ -64,18 +64,27 @@ App.FeedsNewRoute = Em.Route.extend({
     authRedirectable: true,
     setupController: function(controller) {
         controller.set('userSources', this.store.find('source'));
+        controller.set('name', '');
+        controller.set('description', '');
     },
     actions: {
         create: function() {
             var self = this;
-            console.log(this.controller.get('selectedSources'));
             var feed = this.store.createRecord('feed', this.controller.getProperties(['name', 'description']));
             var sources = this.controller.get('sources');
             feed.save().then(function(feed) {
                 feed.get('sources').addObjects(sources);
                 feed.save().then(function(feed) {
                     self.transitionTo('feed', feed);
+                }, function(err) {
+                    console.log(err);
+                    self.controllerFor('application').alert("Create feed failed");
+                    feed.deleteRecord();
                 });
+            }, function(err) {
+                console.log(err);
+                self.controllerFor('application').alert("Create feed failed");
+                feed.deleteRecord();
             });
         }
     }

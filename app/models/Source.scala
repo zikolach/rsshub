@@ -102,7 +102,7 @@ object Source {
   }
 
   def delete(id: Long) = DB.withConnection {
-    implicit  c => SQL("delete sources where id = {id}").on(
+    implicit  c => SQL("delete from sources where id = {id}").on(
       'id -> id
     ).executeUpdate()
   }
